@@ -154,14 +154,14 @@ function refreshWidgets(node) {
     if(node._refreshInProgress) return;
     var updated = false;
     var reevaluate_value = false;
-    var prev_inputs = [];
+    const prev_inputs = node.inputs;
     node._refreshInProgress = true;
 
     if(node.graph) {
     const signature = ALEGROUPCONTROLLER_SERVICE._groupSignature+"|"+node.properties?.[EXCLUDE_KEY]+"|"+node.properties?.[ALTERNATE_KEY]+"|"+node.properties?.[MATCH_KEY];
     
     if (node._groupSignature !== signature) {
-        prev_inputs = node.inputs;
+        //prev_inputs = node.inputs;
         node.widgets = [];
         node.inputs = [];
         reevaluate_value = true;
