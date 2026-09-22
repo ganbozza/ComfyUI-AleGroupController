@@ -273,7 +273,7 @@ function refreshWidgets(node) {
             }
             let input_widget;
             try {
-                input_widget = node.inputs[link.target_slot].widget;
+  //              input_widget = node.inputs[link.target_slot].widget;
             } catch (e) {
                 continue;
             }
