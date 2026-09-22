@@ -161,7 +161,7 @@ function refreshWidgets(node) {
     const signature = ALEGROUPCONTROLLER_SERVICE._groupSignature+"|"+node.properties?.[EXCLUDE_KEY]+"|"+node.properties?.[ALTERNATE_KEY]+"|"+node.properties?.[MATCH_KEY];
     
     if (node._groupSignature !== signature) {
-        //prev_inputs = node.inputs;
+        prev_inputs = node.inputs;
         node.widgets = [];
         node.inputs = [];
         reevaluate_value = true;
