@@ -199,7 +199,7 @@ function refreshWidgets(node) {
                 node.inputs[slot].link = link_num;
                 node.graph.getLink(link_num).target_slot = slot;
             }
-            //node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
+            node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
             updated = true;
         }
         /*
