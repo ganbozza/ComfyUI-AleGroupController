@@ -266,7 +266,7 @@ function refreshWidgets(node) {
                 } else {
                     // Fallback: If your version uses standard connect, tell YOUR node to 
                     // connect directly to the special virtual input container index
-                    node.connect(newInputSlotIndex, innerGraph.inputs, subgraphInputSlotIndex);
+                    node.connect(newInputSlotIndex, node.graph.inputs, subgraphInputSlotIndex);
                 }
             }
             /*
