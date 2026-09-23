@@ -204,7 +204,7 @@ function refreshWidgets(node) {
         }
         if(!node.widgets || !node.widgets.find((w) => w.options.title === gval.title)) {
             const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
-            const link_num = prev_inputs.find((p)=>p.widget.name===gval.title)?.link || null;
+            const link_num = prev_inputs.find((p)=>p.widget.name===gval.title)?._link || null;
             node.addInput(gval.title, "BOOLEAN");
             const slot = node.inputs.length-1;
             if(link_num!==null) {
