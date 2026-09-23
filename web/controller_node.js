@@ -565,7 +565,7 @@ app.registerExtension({
           bindNode(this);
           ALEGROUPCONTROLLER_SERVICE.init();
           ALEGROUPCONTROLLER_SERVICE.registerNode(this);     
-          refreshWidgets(this);
+          //refreshWidgets(this);
             
           return result;
         };
