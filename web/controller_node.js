@@ -252,7 +252,7 @@ function refreshWidgets(node) {
                 node.inputs[slot].link = linkId;
                 if(prev_connection.origin_id<0)
                 {
-                    node.graph.inputs[prev_connection.origin_slot] = [linkId];
+                    node.graph.inputs[prev_connection.origin_slot].linkIds = [linkId];
                 }
             }
 
