@@ -243,8 +243,14 @@ function refreshWidgets(node) {
             */
             let saved_conn = prev_connections.find(c => c.name === gval.title);
             if (saved_conn) {
+                let upstream_node = null;
                 // Find the original upstream node object in the graph
-                let upstream_node = app.graph.getNodeById(saved_conn.origin_id);
+                if(saved_conn.subgraph_id)
+                {
+                    upstream_node = node.graph._rootGraph.getNodeById(saved_conn.subgraph_id)
+                } else {
+                    upstream_node = node.graph.getNodeById(saved_conn.origin_id);
+                }
                 
                 if (upstream_node) {
                     // Connect the upstream node's output slot to THIS node's new input slot
