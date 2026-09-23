@@ -247,9 +247,9 @@ function refreshWidgets(node) {
 
             let prev_connection = prev_connections.find((c)=>c.name==gval.title);
             if(prev_connection) {
-                const linkId = node.graph.last_link_id++;
-                node.graph.links[linkId] = new LiteGraph.LLink(linkId,"BOOLEAN", prev_connection.origin_id, prev_connection.origin_slot, node.id, slot);
-                node.inputs[slot].link = linkId;
+                //const linkId = node.graph.last_link_id++;
+                //node.graph.links[linkId] = new LiteGraph.LLink(linkId,"BOOLEAN", prev_connection.origin_id, prev_connection.origin_slot, node.id, slot);
+               // node.inputs[slot].link = linkId;
                 if(prev_connection.origin_id<0)
                 {
                     //node.graph.inputs[prev_connection.origin_slot].linkIds = [linkId];
