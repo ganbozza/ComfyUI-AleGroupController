@@ -243,6 +243,7 @@ function refreshWidgets(node) {
             */
             node.addInput(gval.title, "BOOLEAN");
             const slot = node.inputs.length-1;
+            node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
             let saved_conn = prev_connections.find(c => c.name === gval.title);
             if (saved_conn) {
                 let upstream_node = null;
