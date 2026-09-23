@@ -245,28 +245,30 @@ function refreshWidgets(node) {
             const newInputSlotIndex = node.inputs.length-1;
             node.inputs[newInputSlotIndex].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
             let saved_conn = prev_connections.find(c => c.name === gval.title);
-            let subgraphInputSlotIndex = -1;
-            if (Array.isArray(node.graph.inputs)) {
-                subgraphInputSlotIndex = node.graph.inputs.findIndex(inp => inp.name === saved_conn.name);
-            } else if (typeof node.graph.inputs === 'object') {
-                // If it's stored as a key-value pair, extract the index mapping
-                const keys = Object.keys(node.graph.inputs);
-                subgraphInputSlotIndex = keys.indexOf(saved_conn.name);
-            }
-            if (subgraphInputSlotIndex !== -1) {        
-                // In ComfyUI Subgraphs, connections from the boundary use a virtual node ID.
-                // The master graph connection router handles this boundary bridge:
-                if (typeof app.graph.connectLines === "function") {
-                    app.graph.connectLines(
-                        innerGraph.inputs,         // The subgraph's input definition array
-                        subgraphInputSlotIndex,    // The slot index of the subgraph boundary pin
-                        node,                      // YOUR custom node instance
-                        newInputSlotIndex          // YOUR custom node's new input slot index
-                    );
-                } else {
-                    // Fallback: If your version uses standard connect, tell YOUR node to 
-                    // connect directly to the special virtual input container index
-                    node.connect(newInputSlotIndex, node.graph.inputs, subgraphInputSlotIndex);
+            if(saved_conn) {
+                let subgraphInputSlotIndex = -1;
+                if (Array.isArray(node.graph.inputs)) {
+                    subgraphInputSlotIndex = node.graph.inputs.findIndex(inp => inp.name === saved_conn.name);
+                } else if (typeof node.graph.inputs === 'object') {
+                    // If it's stored as a key-value pair, extract the index mapping
+                    const keys = Object.keys(node.graph.inputs);
+                    subgraphInputSlotIndex = keys.indexOf(saved_conn.name);
+                }
+                if (subgraphInputSlotIndex !== -1) {        
+                    // In ComfyUI Subgraphs, connections from the boundary use a virtual node ID.
+                    // The master graph connection router handles this boundary bridge:
+                    if (typeof app.graph.connectLines === "function") {
+                        app.graph.connectLines(
+                            innerGraph.inputs,         // The subgraph's input definition array
+                            subgraphInputSlotIndex,    // The slot index of the subgraph boundary pin
+                            node,                      // YOUR custom node instance
+                            newInputSlotIndex          // YOUR custom node's new input slot index
+                        );
+                    } else {
+                        // Fallback: If your version uses standard connect, tell YOUR node to 
+                        // connect directly to the special virtual input container index
+                        node.connect(newInputSlotIndex, node.graph.inputs, subgraphInputSlotIndex);
+                    }
                 }
             }
             /*
