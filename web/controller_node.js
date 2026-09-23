@@ -244,33 +244,7 @@ function refreshWidgets(node) {
             node.addInput(gval.title, "BOOLEAN");
             const newInputSlotIndex = node.inputs.length-1;
             node.inputs[newInputSlotIndex].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
-            let saved_conn = prev_connections.find(c => c.name === gval.title);
-            if(saved_conn) {
-                let subgraphInputSlotIndex = -1;
-                if (Array.isArray(node.graph.inputs)) {
-                    subgraphInputSlotIndex = node.graph.inputs.findIndex(inp => inp.name === saved_conn.name);
-                } else if (typeof node.graph.inputs === 'object') {
-                    // If it's stored as a key-value pair, extract the index mapping
-                    const keys = Object.keys(node.graph.inputs);
-                    subgraphInputSlotIndex = keys.indexOf(saved_conn.name);
-                }
-                if (subgraphInputSlotIndex !== -1) {        
-                    // In ComfyUI Subgraphs, connections from the boundary use a virtual node ID.
-                    // The master graph connection router handles this boundary bridge:
-                    if (typeof app.graph.connectLines === "function") {
-                        app.graph.connectLines(
-                            innerGraph.inputs,         // The subgraph's input definition array
-                            subgraphInputSlotIndex,    // The slot index of the subgraph boundary pin
-                            node,                      // YOUR custom node instance
-                            newInputSlotIndex          // YOUR custom node's new input slot index
-                        );
-                    } else {
-                        // Fallback: If your version uses standard connect, tell YOUR node to 
-                        // connect directly to the special virtual input container index
-                        node.connect(newInputSlotIndex, node.graph.inputs, subgraphInputSlotIndex);
-                    }
-                }
-            }
+            
             /*
             if (saved_conn) {
                 let upstream_node = null;
@@ -354,6 +328,7 @@ function refreshWidgets(node) {
   */
     var seen = [];
     if(node.inputs.length>0) {
+        /*
         for(const link of  [...node.graph.links.values()].filter(m => m.target_id===node.id)) {
             // upstreamWidget = getUpstreamWidgetById(link, this.graph);
             if (!node.inputs[link.target_slot]) {
@@ -374,6 +349,7 @@ function refreshWidgets(node) {
                     seen.push(localWidget.name);
                     setWidgetValue(localWidget, upstreamWidget.value);
                     updated = true;
+                */
                 /*
                localWidget.value = upstreamWidget.value;
                if (typeof localWidget.callback === "function") {
