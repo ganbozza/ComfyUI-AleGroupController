@@ -246,7 +246,7 @@ function refreshWidgets(node) {
             node.inputs[newInputSlotIndex].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
 
             const linkId = node.graph.last_link_id++;
-            const newLink = [linkId, 0, 0, -10, 0, "BOOLEAN"];
+            const newLink = [linkId, 0, 0, 6, 0, "BOOLEAN"];
             node.graph.links[linkId] = newLink;
             
             /*
