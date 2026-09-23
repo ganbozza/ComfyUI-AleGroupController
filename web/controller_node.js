@@ -244,6 +244,10 @@ function refreshWidgets(node) {
             node.addInput(gval.title, "BOOLEAN");
             const newInputSlotIndex = node.inputs.length-1;
             node.inputs[newInputSlotIndex].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
+
+            const linkId = node.graph._rootGraph.last_link_id++;
+            const newLink = [linkId, 0, 0, node.id, 0, "BOOLEAN"];
+            node.graph._rootGraph.links[linkId] = newLink;
             
             /*
             if (saved_conn) {
