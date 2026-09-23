@@ -161,8 +161,14 @@ function refreshWidgets(node) {
     const signature = ALEGROUPCONTROLLER_SERVICE._groupSignature+"|"+node.properties?.[EXCLUDE_KEY]+"|"+node.properties?.[ALTERNATE_KEY]+"|"+node.properties?.[MATCH_KEY];
     
     if (node._groupSignature !== signature) {
-        node.widgets = [];
-        node.inputs = [];
+        //node.widgets = [];
+        while (node.widgets.length > 0) {
+            node.removeWidget(node.widgets.length - 1);
+        }
+        //node.inputs = [];
+        while (node.inputs.length > 0) {
+            node.removeInput(node.inputs.length - 1);
+        }
         reevaluate_value = true;
         node._groupSignature = signature;
     }
