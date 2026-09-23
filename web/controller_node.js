@@ -165,7 +165,11 @@ function refreshWidgets(node) {
     }
     */
     let prev_connections = [];
-
+    setTimeout(() => {
+        refreshWidgets(node);
+      }, 100);
+    return;
+    
     node._refreshInProgress = true;
 
     if(node.graph) {
@@ -565,7 +569,7 @@ app.registerExtension({
           bindNode(this);
           ALEGROUPCONTROLLER_SERVICE.init();
           ALEGROUPCONTROLLER_SERVICE.registerNode(this);     
-          //refreshWidgets(this);
+          refreshWidgets(this);
             
           return result;
         };
