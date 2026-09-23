@@ -158,7 +158,9 @@ function refreshWidgets(node) {
     let prev_inputs = [];
     if (node.inputs) {
         for (let i = 0; i < node.inputs.length; i++) {
-            prev_inputs.push(node.inputs[i]);
+            var ni = node.inputs[i];
+            ni.link = node.inputs[i].link;
+            prev_inputs.push(pp);
         }
     }
     node._refreshInProgress = true;
