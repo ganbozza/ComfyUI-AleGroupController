@@ -163,11 +163,11 @@ function refreshWidgets(node) {
     if (node._groupSignature !== signature) {
         //node.widgets = [];
         while (node.widgets.length > 0) {
-            node.removeWidget(node.widgets.length - 1);
+            node.removeWidget(node.widgets[0]);
         }
         //node.inputs = [];
         while (node.inputs.length > 0) {
-            node.removeInput(node.inputs.length - 1);
+            node.removeInput(node.input[0]);
         }
         reevaluate_value = true;
         node._groupSignature = signature;
