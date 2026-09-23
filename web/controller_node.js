@@ -170,14 +170,14 @@ function refreshWidgets(node) {
             // Look up the active link in ComfyUI's global graph
             if(node.graph) {
                 let link_info = node.graph.links[input.link];
-            }
-            
-            if (link_info) {
-                prev_connections.push({
-                    name: input.name,
-                    origin_id: link_info.origin_id,     // The ID of the node sending the data
-                    origin_slot: link_info.origin_slot  // The output slot index of that node
-                    });
+                
+                if (link_info) {
+                    prev_connections.push({
+                        name: input.name,
+                        origin_id: link_info.origin_id,     // The ID of the node sending the data
+                        origin_slot: link_info.origin_slot  // The output slot index of that node
+                        });
+                }
             }
         });
     }
