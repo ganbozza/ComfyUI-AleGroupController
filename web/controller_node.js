@@ -180,7 +180,7 @@ function refreshWidgets(node) {
                     let link_info = node.graph.links[input.link];
                     
                     if (link_info) {
-                        const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(input.link, node.graph);
+                        const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, node.graph);
                         prev_connections.push({
                             name: input.name,
                             origin_id: link_info.origin_id,     // The ID of the node sending the data
