@@ -223,7 +223,8 @@ function refreshWidgets(node) {
         }
         if(!node.widgets || !node.widgets.find((w) => w.options.title === gval.title)) {
             const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
-            const link_num = prev_connections.find((p)=>p.name===gval.title)?._link || null;
+            /*
+            const link_num = prev_connections.find((p)=>p.widgets.name===gval.title)?._link || null;
             node.addInput(gval.title, "BOOLEAN");
             const slot = node.inputs.length-1;
             if(link_num!==null) {
@@ -231,6 +232,17 @@ function refreshWidgets(node) {
                 node.graph.getLink(link_num).target_slot = slot;
             }
             node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
+            */
+            let saved_conn = prev_connections.find(c => c.name === gval.title);
+            if (saved_conn) {
+                // Find the original upstream node object in the graph
+                let upstream_node = app.graph.getNodeById(saved_conn.origin_id);
+                
+                if (upstream_node) {
+                    // Connect the upstream node's output slot to THIS node's new input slot
+                    upstream_node.connect(saved_conn.origin_slot, node.id, node.inputs.length-1);
+                }
+            }
             updated = true;
         }
         /*
