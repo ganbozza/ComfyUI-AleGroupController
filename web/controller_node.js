@@ -154,6 +154,7 @@ function refreshWidgets(node) {
     if(node._refreshInProgress) return;
     var updated = false;
     var reevaluate_value = false;
+    /*
     //const prev_inputs = [...node.inputs];
     let prev_inputs = [];
     if (node.inputs) {
@@ -161,6 +162,21 @@ function refreshWidgets(node) {
             prev_inputs.push(node.inputs[i]);
             prev_inputs[prev_inputs.length-1]._link = node.inputs[i].link;
         }
+    }
+    */
+    if (node.inputs) {
+        node.inputs.forEach((input, index) => {
+            // Look up the active link in ComfyUI's global graph
+            let link_info = app.graph.links[input.link];
+            
+            if (link_info) {
+                prev_connections.push({
+                    name: input.name,
+                    origin_id: link_info.origin_id,     // The ID of the node sending the data
+                    origin_slot: link_info.origin_slot  // The output slot index of that node
+                    });
+            }
+        });
     }
     node._refreshInProgress = true;
 
