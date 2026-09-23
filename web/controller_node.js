@@ -253,6 +253,8 @@ function refreshWidgets(node) {
                 if(prev_connection.origin_id<0)
                 {
                     node.graph.inputs[prev_connection.origin_slot].linkIds = [linkId];
+                    const subgraphWidget = addBooleanWidgetToNode(node.graph._rootGraph.getNodeById(6), gval.title, gval.value, gval.key);
+                    node.graph.inputs[prev_connection.origin_slot].widget = {  name : gval.title, _hash_ref : subgraphWidget._hash_ref };
                 }
             }
 
