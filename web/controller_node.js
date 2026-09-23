@@ -242,14 +242,40 @@ function refreshWidgets(node) {
             node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
             */
             node.addInput(gval.title, "BOOLEAN");
-            const slot = node.inputs.length-1;
-            node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
+            const newInputSlotIndex = node.inputs.length-1;
+            node.inputs[newInputSlotIndex].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
             let saved_conn = prev_connections.find(c => c.name === gval.title);
+            let subgraphInputSlotIndex = -1;
+            if (Array.isArray(node.graph.inputs)) {
+                subgraphInputSlotIndex = node.graph.inputs.findIndex(inp => inp.name === saved_conn.name);
+            } else if (typeof node.graph.inputs === 'object') {
+                // If it's stored as a key-value pair, extract the index mapping
+                const keys = Object.keys(node.graph.inputs);
+                subgraphInputSlotIndex = keys.indexOf(saved_conn.name);
+            }
+            if (subgraphInputSlotIndex !== -1) {        
+                // In ComfyUI Subgraphs, connections from the boundary use a virtual node ID.
+                // The master graph connection router handles this boundary bridge:
+                if (typeof app.graph.connectLines === "function") {
+                    app.graph.connectLines(
+                        innerGraph.inputs,         // The subgraph's input definition array
+                        subgraphInputSlotIndex,    // The slot index of the subgraph boundary pin
+                        node,                      // YOUR custom node instance
+                        newInputSlotIndex          // YOUR custom node's new input slot index
+                    );
+                } else {
+                    // Fallback: If your version uses standard connect, tell YOUR node to 
+                    // connect directly to the special virtual input container index
+                    node.connect(newInputSlotIndex, innerGraph.inputs, subgraphInputSlotIndex);
+                }
+            }
+            /*
             if (saved_conn) {
                 let upstream_node = null;
                 // Find the original upstream node object in the graph
                 if(saved_conn.subgraph_id)
                 {
+                    subgraphInputSlotIndex = node.graph.inputs.findIndex(inp => inp.name === saved_conn.name);
                     upstream_node = node.graph._rootGraph.getNodeById(saved_conn.subgraph_id)
                 } else {
                     upstream_node = node.graph.getNodeById(saved_conn.origin_id);
@@ -260,6 +286,7 @@ function refreshWidgets(node) {
                     upstream_node.connect(saved_conn.origin_slot, node.id, node.inputs.length-1);
                 }
             }
+            */
             updated = true;
         }
         /*
