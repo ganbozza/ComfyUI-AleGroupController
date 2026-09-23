@@ -356,10 +356,10 @@ function refreshWidgets(node) {
                     localWidget.callback(upstreamWidget.value);
                     updated = true;
                 }
-                */
+                *//*
                 }
             }
-        }
+        }*/
         /*
         if(reevaluate_value) {
             for(const widget of node.widgets) {
