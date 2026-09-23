@@ -154,7 +154,13 @@ function refreshWidgets(node) {
     if(node._refreshInProgress) return;
     var updated = false;
     var reevaluate_value = false;
-    const prev_inputs = [...node.inputs];
+    //const prev_inputs = [...node.inputs];
+    let prev_inputs = [];
+    if (node.inputs) {
+        for (let i = 0; i < node.inputs.length; i++) {
+            prev_inputs.push(node.inputs[i]);
+        }
+    }
     node._refreshInProgress = true;
 
     if(node.graph) {
