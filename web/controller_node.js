@@ -164,6 +164,7 @@ function refreshWidgets(node) {
         }
     }
     */
+    let prev_connections = [];
     if (node.inputs) {
         node.inputs.forEach((input, index) => {
             // Look up the active link in ComfyUI's global graph
