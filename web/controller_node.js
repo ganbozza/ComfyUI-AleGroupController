@@ -167,7 +167,7 @@ function refreshWidgets(node) {
         }
         //node.inputs = [];
         while (node.inputs.length > 0) {
-            node.removeInput(node.input[0]);
+            node.removeInput(node.inputs[0]);
         }
         reevaluate_value = true;
         node._groupSignature = signature;
