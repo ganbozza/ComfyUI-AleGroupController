@@ -180,12 +180,17 @@ function refreshWidgets(node) {
                     let link_info = node.graph.links[input.link];
                     
                     if (link_info) {
-                        const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, node.graph);
-                        prev_connections.push({
+                        let pc = {
                             name: input.name,
                             origin_id: link_info.origin_id,     // The ID of the node sending the data
-                            origin_slot: link_info.origin_slot  // The output slot index of that node
-                            });
+                            origin_slot: link_info.origin_slot,  // The output slot index of that node
+                            subgraph_id = null
+                            };
+                        if(link_info.origin_id<0) // subgraph
+                        {
+                            pc.subgraph_id = [...node.graph._rootGraph._nodes.values()].filter(n => n.subgraph).find((n) => [...n.subgraph.links.values()].find((l)=>l===link_info))?.id || null;                            
+                        }
+                        prev_connections.push(pc);
                     }
                 }
             });
