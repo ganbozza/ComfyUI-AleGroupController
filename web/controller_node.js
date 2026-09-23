@@ -165,28 +165,31 @@ function refreshWidgets(node) {
     }
     */
     let prev_connections = [];
-    if (node.inputs) {
-        node.inputs.forEach((input, index) => {
-            // Look up the active link in ComfyUI's global graph
-            if(node.graph) {
-                let link_info = node.graph.links[input.link];
-                
-                if (link_info) {
-                    prev_connections.push({
-                        name: input.name,
-                        origin_id: link_info.origin_id,     // The ID of the node sending the data
-                        origin_slot: link_info.origin_slot  // The output slot index of that node
-                        });
-                }
-            }
-        });
-    }
+
     node._refreshInProgress = true;
 
     if(node.graph) {
     const signature = ALEGROUPCONTROLLER_SERVICE._groupSignature+"|"+node.properties?.[EXCLUDE_KEY]+"|"+node.properties?.[ALTERNATE_KEY]+"|"+node.properties?.[MATCH_KEY];
     
     if (node._groupSignature !== signature) {
+
+        if (node.inputs) {
+            node.inputs.forEach((input, index) => {
+                // Look up the active link in ComfyUI's global graph
+                if(node.graph) {
+                    let link_info = node.graph.links[input.link];
+                    
+                    if (link_info) {
+                        const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(input.link, node.graph);
+                        prev_connections.push({
+                            name: input.name,
+                            origin_id: link_info.origin_id,     // The ID of the node sending the data
+                            origin_slot: link_info.origin_slot  // The output slot index of that node
+                            });
+                    }
+                }
+            });
+        }
         //node.widgets = [];
         while (node.widgets.length > 0) {
             node.removeWidget(node.widgets[0]);
