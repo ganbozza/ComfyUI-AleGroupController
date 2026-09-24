@@ -165,11 +165,12 @@ function refreshWidgets(node) {
     }
     */
     let prev_connections = [];
+    /*
     setTimeout(() => {
         refreshWidgets(node);
       }, 100);
     return;
-    
+    */
     node._refreshInProgress = true;
 
     if(node.graph) {
