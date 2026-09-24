@@ -661,6 +661,7 @@ app.registerExtension({
                 const localWidget = this.widgets[link_info.target_slot];
                 const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, this.graph);
                 syncPromotedWidgetCallback(upstreamWidget, localWidget);
+                this.setDirtyCanvas(true, true);
                   /*
                     if(upstreamWidget && localWidget && localWidget.value!=upstreamWidget.value) {
                        localWidget.value = upstreamWidget.value;
