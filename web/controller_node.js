@@ -498,7 +498,7 @@ function findParentSubgraphNode(node) {
 }
 function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
     if((!promotedWidget) || (!sourceWidget)) return;
- requestAnimationFrame(() => {
+
     const origPromotedCallback = (typeof promotedWidget.origPromotedCallback === "function") ? promotedWidget.origPromotedCallback : promotedWidget.callback;
     
     // Hijack the top-level master proxy toggle box safely
@@ -515,7 +515,6 @@ function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
     };
      // Mark as hijacked to prevent endless callback attachment stacks
      //promotedWidget._is_hijacked = true;
-     });
 }
 /*
 // --- Helper: Bind callbacks directly between inner widgets and outer promoted proxies ---
@@ -661,10 +660,10 @@ app.registerExtension({
               if(connect && link_info) {
                 const localWidget = this.widgets[link_info.target_slot];
                 const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, this.graph);
-                syncPromotedWidgetCallback(upstreamWidget, localWidget);
                    setTimeout(() => {
+                syncPromotedWidgetCallback(upstreamWidget, localWidget);
                 console.log(app.graph.nodes[0].widgets[0].callback);
-                       }, 1000);
+                       }, 500);
                   /*
                     if(upstreamWidget && localWidget && localWidget.value!=upstreamWidget.value) {
                        localWidget.value = upstreamWidget.value;
