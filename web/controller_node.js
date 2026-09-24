@@ -251,12 +251,13 @@ function refreshWidgets(node) {
 
             let prev_connection = prev_connections.find((c)=>c.name==gval.title);
             if(prev_connection) {
-                //const linkId = node.graph.last_link_id++;
-                //node.graph.links[linkId] = new LiteGraph.LLink(linkId,"BOOLEAN", prev_connection.origin_id, prev_connection.origin_slot, node.id, slot);
-               // node.inputs[slot].link = linkId;
+                const linkId = node.graph.last_link_id++;
+                node.graph.links[linkId] = new LiteGraph.LLink(linkId,"BOOLEAN", prev_connection.origin_id, prev_connection.origin_slot, node.id, slot);
+                //node.inputs[slot].link = linkId;
                 if(prev_connection.origin_id<0)
                 {
-                    //node.graph.inputs[prev_connection.origin_slot].linkIds = [linkId];
+                    node.graph._rootGraph.getNodeById(prev_connection.subgraph_id).subgraph.inputs[0].linkIds = [linkId];
+                    ///node.graph.inputs[prev_connection.origin_slot].linkIds = [linkId];
                     //const subgraphNode = node.graph._rootGraph.getNodeById(prev_connection.subgraph_id);
                     //const subgraphWidget = addBooleanWidgetToNode(subgraphNode, gval.title, gval.value, gval.key);
                     //subgraphNode.inputs[prev_connection.origin_slot].widget = {  name : gval.title, _hash_ref : subgraphWidget._hash_ref };
