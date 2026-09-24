@@ -493,7 +493,7 @@ function findParentSubgraphNode(node) {
     return null;
 }
 function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
-    if((!sourceWidget) || (promotedWidget._is_hijacked)) return;
+    if(!sourceWidget) return;
 
     const origPromotedCallback = promotedWidget.callback;
     
@@ -510,7 +510,7 @@ function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
         }
     };
      // Mark as hijacked to prevent endless callback attachment stacks
-     promotedWidget._is_hijacked = true;
+     //promotedWidget._is_hijacked = true;
 }
 /*
 // --- Helper: Bind callbacks directly between inner widgets and outer promoted proxies ---
