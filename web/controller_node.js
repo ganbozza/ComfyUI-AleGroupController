@@ -260,7 +260,7 @@ function refreshWidgets(node) {
                 if(prev_connection.origin_id<0)
                 {
                     node.graph._rootGraph.getNodeById(prev_connection.subgraph_id).subgraph.inputs[0].linkIds = [linkId];
-                    const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(node.graph.links[linkId], this.graph)
+                    const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(node.graph.links[linkId], node.graph)
                     syncPromotedWidgetCallback(upstreamWidget, boolWidget);
                     ///node.graph.inputs[prev_connection.origin_slot].linkIds = [linkId];
                     //const subgraphNode = node.graph._rootGraph.getNodeById(prev_connection.subgraph_id);
