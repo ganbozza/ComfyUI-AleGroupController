@@ -492,6 +492,26 @@ function findParentSubgraphNode(node) {
     }
     return null;
 }
+function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
+    if((!sourceWidget) || (promotedWidget._is_hijacked)) return;
+
+    const origPromotedCallback = promotedWidget.callback;
+    
+    // Hijack the top-level master proxy toggle box safely
+    promotedWidget.callback = function(value) {
+        origPromotedCallback?.apply(this, arguments);
+        
+        // Push the changed state down to our interior node widget
+        sourceWidget.value = value;
+        
+        // FORCED TRIGGER: Instantly execute custom frontend logic callback
+        if (typeof sourceWidget.callback === "function") {
+            sourceWidget.callback(value);
+        }
+    };
+     // Mark as hijacked to prevent endless callback attachment stacks
+     promotedWidget._is_hijacked = true;
+}
 /*
 // --- Helper: Bind callbacks directly between inner widgets and outer promoted proxies ---
 function syncPromotedWidgetCallback(node, slotName) {
@@ -634,8 +654,10 @@ app.registerExtension({
           if (side === 1 && this.inputs[slot] && output.widget && output.widget._hash_ref) {
               this.inputs[slot].widget = { name: this.inputs[slot].name, _hash_ref : output.widget._hash_ref };
               if(connect && link_info) {
-                    const localWidget = this.widgets[link_info.target_slot];
-                    const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, this.graph);
+                const localWidget = this.widgets[link_info.target_slot];
+                const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, this.graph);
+                syncPromotedWidgetCallback(upstreamWidget, localWidget);
+                  /*
                     if(upstreamWidget && localWidget && localWidget.value!=upstreamWidget.value) {
                        localWidget.value = upstreamWidget.value;
                        if (typeof localWidget.callback === "function") {
@@ -643,6 +665,7 @@ app.registerExtension({
                             this.setDirtyCanvas(true, true);
                         }
                     }
+                  */
                   /*
                   const graphContext = this.graph || app.graph;
                   const upstreamNode = graphContext.getNodeById(link_info.origin_id);
