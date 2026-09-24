@@ -249,7 +249,7 @@ function refreshWidgets(node) {
             node.addInput(gval.title, "BOOLEAN");
             const slot = node.inputs.length-1;
             node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
-
+            /*
             let prev_connection = prev_connections.find((c)=>c.name==gval.title);
             if(prev_connection) {
                 const linkId = node.graph.last_link_id++;
@@ -264,6 +264,7 @@ function refreshWidgets(node) {
                     //subgraphNode.inputs[prev_connection.origin_slot].widget = {  name : gval.title, _hash_ref : subgraphWidget._hash_ref };
                 }
             }
+            */
 
             /*
             
