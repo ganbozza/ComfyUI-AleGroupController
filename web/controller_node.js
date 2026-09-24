@@ -201,8 +201,10 @@ function refreshWidgets(node) {
             });
         }
         //node.widgets = [];
-        while (node.widgets.length > 0) {
-            node.removeWidget(node.widgets[0]);
+        if(node.widgets) {
+            while (node.widgets.length > 0) {
+                node.removeWidget(node.widgets[0]);
+            }
         }
         //node.inputs = [];
         while (node.inputs.length > 0) {
