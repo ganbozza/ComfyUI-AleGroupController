@@ -249,7 +249,7 @@ function refreshWidgets(node) {
             node.addInput(gval.title, "BOOLEAN");
             const slot = node.inputs.length-1;
             node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
-            /*
+            
             let prev_connection = prev_connections.find((c)=>c.name==gval.title);
             if(prev_connection) {
                 const linkId = node.graph.last_link_id++;
@@ -264,7 +264,7 @@ function refreshWidgets(node) {
                     //subgraphNode.inputs[prev_connection.origin_slot].widget = {  name : gval.title, _hash_ref : subgraphWidget._hash_ref };
                 }
             }
-            */
+            
 
             /*
             
@@ -572,7 +572,7 @@ app.registerExtension({
           bindNode(this);
           ALEGROUPCONTROLLER_SERVICE.init();
           ALEGROUPCONTROLLER_SERVICE.registerNode(this);     
-          //refreshWidgets(this);
+          refreshWidgets(this);
             
           return result;
         };
@@ -596,8 +596,8 @@ app.registerExtension({
         nodeType.prototype.onConfigure = function (info) {
          
           for(let i=0;i<info.inputs.length;i++) {              
-              const boolWidget = addBooleanWidgetToNode(this, info.inputs[i].widget.name, info.widgets_values[i], ALEGROUPCONTROLLER_SERVICE.nameToKey(info.inputs[i].widget.name));
-              this.inputs[i].widget = { name : info.inputs[i].widget.name, _hash_ref : boolWidget._hash_ref };
+              //const boolWidget = addBooleanWidgetToNode(this, info.inputs[i].widget.name, info.widgets_values[i], ALEGROUPCONTROLLER_SERVICE.nameToKey(info.inputs[i].widget.name));
+              //this.inputs[i].widget = { name : info.inputs[i].widget.name, _hash_ref : boolWidget._hash_ref };
           }
               /*
             if (this.widgets && this.widgets.find((w) => { return w._hash_ref===info.inputs[i].widget._hash_ref; })) continue;
