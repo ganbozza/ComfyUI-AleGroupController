@@ -495,11 +495,14 @@ function findParentSubgraphNode(node) {
 function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
     if(!sourceWidget) return;
 
-    const origPromotedCallback = promotedWidget.callback;
+    if(typeof promotedWidget.origPromotedCallback === "function") {
+        promotedWidget.callback = promotedWidget.origPromotedCallback;
+    }
+    promotedWidget.origPromotedCallback = promotedWidget.callback;
     
     // Hijack the top-level master proxy toggle box safely
     promotedWidget.callback = function(value) {
-        origPromotedCallback?.apply(this, arguments);
+        promotedWidget.origPromotedCallback?.apply(this, arguments);
         
         // Push the changed state down to our interior node widget
         sourceWidget.value = value;
