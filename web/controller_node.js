@@ -497,24 +497,49 @@ function findParentSubgraphNode(node) {
     return null;
 }
 function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
-    if((!promotedWidget) || (!sourceWidget)) return;
+    if((!promotedWidget) || (!sourceWidget) || (promotedWidget._is_hijacked)) return;
+    requestAnimationFrame(() => {
+        //const origPromotedCallback = (typeof promotedWidget.origPromotedCallback === "function") ? promotedWidget.origPromotedCallback : promotedWidget.callback;
+        let origPromotedCallback = promotedWidget.callback;
+        
+        // Hijack the top-level master proxy toggle box safely
+        const newCallback = function(value) {
+            if (typeof origPromotedCallback === "function") {
+                origPromotedCallback?.apply(this, arguments);
+            }
+            
+            // Push the changed state down to our interior node widget
+            sourceWidget.value = value;
+            
+            // FORCED TRIGGER: Instantly execute custom frontend logic callback
+            if (typeof sourceWidget.callback === "function") {
+                sourceWidget.callback(value);
+            }
+        };
 
-    const origPromotedCallback = (typeof promotedWidget.origPromotedCallback === "function") ? promotedWidget.origPromotedCallback : promotedWidget.callback;
-    
-    // Hijack the top-level master proxy toggle box safely
-    promotedWidget.callback = function(value) {
-        origPromotedCallback?.apply(this, arguments);
+        // Initialize the widget with our new custom callback
+        promotedWidget.callback = newCallback;
+
+         // Mark as hijacked to prevent endless callback attachment stacks
+         promotedWidget._is_hijacked = true;
         
-        // Push the changed state down to our interior node widget
-        sourceWidget.value = value;
-        
-        // FORCED TRIGGER: Instantly execute custom frontend logic callback
-        if (typeof sourceWidget.callback === "function") {
-            sourceWidget.callback(value);
-        }
+        // 4. Lock it down using a getter and setter
+        Object.defineProperty(promotedWidget, "callback", {
+            get() { 
+                return newCallback; 
+            },
+            set(newEngineCallback) { 
+                // If ComfyUI or another extension tries to change the callback later:
+                if (newEngineCallback !== newCallback) {
+                    console.log("Intercepted an engine callback update. Saving it to fallback.");
+                    // Update our pointer so the engine's new function gets executed inside our wrapper
+                    origPromotedCallback = newEngineCallback;
+                }
+            },
+            configurable: true,
+            enumerable: true
+        });        
     };
-     // Mark as hijacked to prevent endless callback attachment stacks
-     //promotedWidget._is_hijacked = true;
 }
 /*
 // --- Helper: Bind callbacks directly between inner widgets and outer promoted proxies ---
@@ -660,10 +685,10 @@ app.registerExtension({
               if(connect && link_info) {
                 const localWidget = this.widgets[link_info.target_slot];
                 const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, this.graph);
-                   setTimeout(() => {
+                //setTimeout(() => {
                 syncPromotedWidgetCallback(upstreamWidget, localWidget);
-                console.log(app.graph.nodes[0].widgets[0].callback);
-                       }, 500);
+                //console.log(app.graph.nodes[0].widgets[0].callback);
+                //       }, 500);
                   /*
                     if(upstreamWidget && localWidget && localWidget.value!=upstreamWidget.value) {
                        localWidget.value = upstreamWidget.value;
