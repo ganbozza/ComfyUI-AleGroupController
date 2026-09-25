@@ -368,7 +368,7 @@ class AleGroupControllerService {
   }
   
   getUpstreamWidgetInSubgraphByLink(link, graphContext) {
-      const upstreamSubgraph = [...graphContext._nodes.values()].filter(n => n.subgraph).find((n) => [...n.subgraph.links.values()].find((l)=>l===link));
+      const upstreamSubgraph = [...graphContext._nodes.values()].filter(n => n.subgraph).find((n) => [...n.subgraph.links.values()].find((l)=>l===link))?.subgraph;
       if(upstreamSubgraph) {
         // takyah kut ni : const inputSlot = inputs.find((i)=>i._subgraphSlot.linkIds.find(li => li===link.id))
         const nextUpstreamLink = upstreamSubgraph.inputs[link.origin_slot].link;
