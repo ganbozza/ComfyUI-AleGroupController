@@ -348,6 +348,13 @@ class AleGroupControllerService {
   // inputs[1]._subgraphSlot.linkIds (subgraph punya input yg related dgn link id) dari link id tu boleh tgh node target_id & target_slot
   // one liner : [...app.graph._nodes.values()].filter(m => m.subgraph).find((m) => m.subgraph.links === app.graph.nodes[2].subgraph.links).inputs.find((i)=>i._subgraphSlot.linkIds.find(li => li===2))
   getUpstreamWidgetByLink(link, graphContext) {
+    if(link.origin_id>0) {
+        return graphContext.getNodeById(link.origin_id)?.inputs[link.origin_slot].widget;
+    } else {
+      return [...graphContext._rootGraph._nodes.values()].filter(n => n.subgraph).find((n) => [...n.subgraph.links.values()].find((l)=>l===link))?.inputs[link.origin_slot].widget;
+    }
+  }
+  getUpstreamWidgetByLinka(link, graphContext) {
       /*
       if(link.origin_id>0) {
           const upstreamNode = graphContext.getNodeById(link.origin_id);
@@ -367,7 +374,7 @@ class AleGroupControllerService {
       return this.getUpstreamWidgetInSubgraphByLink(link, graphContext._rootGraph);
   }
   
-  getUpstreamWidgetInSubgraphByLink(link, graphContext) {
+  getUpstreamWidgetInSubgraphByLinka(link, graphContext) {
       const upstreamSubgraph = [...graphContext._nodes.values()].filter(n => n.subgraph).find((n) => [...n.subgraph.links.values()].find((l)=>l===link))?.subgraph;
       if(upstreamSubgraph) {
         // takyah kut ni : const inputSlot = inputs.find((i)=>i._subgraphSlot.linkIds.find(li => li===link.id))
