@@ -620,8 +620,10 @@ app.registerExtension({
 
           bindNode(this);
           ALEGROUPCONTROLLER_SERVICE.init();
-          ALEGROUPCONTROLLER_SERVICE.registerNode(this);     
+          ALEGROUPCONTROLLER_SERVICE.registerNode(this);
+            requestAnimationFrame(() => {
           refreshWidgets(this);
+            });
             
           return result;
         };
