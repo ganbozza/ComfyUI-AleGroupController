@@ -262,7 +262,7 @@ function refreshWidgets(node) {
                 //node.inputs[slot].link = linkId;
                 if(prev_connection.origin_id<0)
                 {
-                    node.graph._rootGraph.getNodeById(prev_connection.subgraph_id).subgraph.inputs[0].linkIds.push(linkId);
+                    node.graph._rootGraph.getNodeById(prev_connection.subgraph_id).subgraph.inputs[prev_connection.origin_slot].linkIds.push(linkId);
                     const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(node.graph.links[linkId], node.graph);
                     syncPromotedWidgetCallback(upstreamWidget, boolWidget);
                     ///node.graph.inputs[prev_connection.origin_slot].linkIds = [linkId];
