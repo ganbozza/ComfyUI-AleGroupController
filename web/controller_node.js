@@ -176,7 +176,7 @@ function refreshWidgets(node) {
     if(node.graph) {
     const signature = (ALEGROUPCONTROLLER_SERVICE._groupSignature||"")+"|"+node.properties?.[EXCLUDE_KEY]+"|"+node.properties?.[ALTERNATE_KEY]+"|"+node.properties?.[MATCH_KEY];
     
-    if (node._groupSignature !== signature) {
+    if ((node._groupcollected) && (node._groupSignature !== signature)) {
 
         if (node.inputs) {
             node.inputs.forEach((input, index) => {
@@ -224,6 +224,9 @@ function refreshWidgets(node) {
                                       ));
     } else {
         service_groups_collection = ALEGROUPCONTROLLER_SERVICE.group_collections;
+    }
+    if (service_groups_collection.size>0) {
+        node._groupcollected = true;
     }
     
     for(const [gkey, gval] of service_groups_collection) {
