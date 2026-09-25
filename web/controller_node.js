@@ -539,7 +539,7 @@ function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
             configurable: true,
             enumerable: true
         });        
-    };
+    });
 }
 /*
 // --- Helper: Bind callbacks directly between inner widgets and outer promoted proxies ---
