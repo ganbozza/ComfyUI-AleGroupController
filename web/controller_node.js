@@ -538,10 +538,12 @@ app.registerExtension({
           if (side === 1 && this.inputs[slot] && output.widget && output.widget._hash_ref) {
               this.inputs[slot].widget = { name: this.inputs[slot].name, _hash_ref : output.widget._hash_ref };
               if(connect && link_info) {
+                  /*
                 const localWidget = this.widgets[link_info.target_slot];
                 const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, this.graph);
                 //setTimeout(() => {
                 syncPromotedWidgetCallback(upstreamWidget, localWidget);
+                  */
                 //console.log(app.graph.nodes[0].widgets[0].callback);
                 //       }, 500);
                   /*
