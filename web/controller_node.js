@@ -151,278 +151,94 @@ function parseSets(str) {
 }
 
 function refreshWidgets(node) {
-    if(node._refreshInProgress) return;
-    var updated = false;
-    var reevaluate_value = false;
-    /*
-    //const prev_inputs = [...node.inputs];
-    let prev_inputs = [];
-    if (node.inputs) {
-        for (let i = 0; i < node.inputs.length; i++) {
-            prev_inputs.push(node.inputs[i]);
-            prev_inputs[prev_inputs.length-1]._link = node.inputs[i].link;
-        }
-    }
-    */
-    let prev_connections = [];
-    /*
-    setTimeout(() => {
-        refreshWidgets(node);
-      }, 100);
-    return;
-    */
+    if (node._refreshInProgress) return;
     node._refreshInProgress = true;
+    let updated = false;
 
-    if(node.graph) {
-    const signature = (ALEGROUPCONTROLLER_SERVICE._groupSignature||"")+"|"+node.properties?.[EXCLUDE_KEY]+"|"+node.properties?.[ALTERNATE_KEY]+"|"+node.properties?.[MATCH_KEY];
-    
-    if ((node._groupcollected) && (node._groupSignature !== signature)) {
+    try {
+        if (!node.graph) return;
 
-        if (node.inputs) {
-            node.inputs.forEach((input, index) => {
-                // Look up the active link in ComfyUI's global graph
-                if(node.graph) {
-                    let link_info = node.graph.links[input.link];
-                    
-                    if (link_info) {
-                        let pc = {
-                            name: input.name,
-                            origin_id: link_info.origin_id,     // The ID of the node sending the data
-                            origin_slot: link_info.origin_slot,  // The output slot index of that node
-                            subgraph_id: null
-                            };
-                        if(link_info.origin_id<0) // subgraph
-                        {
-                            pc.subgraph_id = [...node.graph._rootGraph._nodes.values()].filter(n => n.subgraph).find((n) => [...n.subgraph.links.values()].find((l)=>l===link_info))?.id || null;                            
-                        }
-                        prev_connections.push(pc);
-                    }
-                }
-            });
+        let service_groups_collection;
+        if (node.properties?.[SORT_A_KEY]) {
+            service_groups_collection = new Map([...ALEGROUPCONTROLLER_SERVICE.group_collections.entries()].sort(
+                (a, b) => ALEGROUPCONTROLLER_SERVICE.ALPHABETICAL_COLLATOR.compare(a[1].title, b[1].title) || a[1].key.localeCompare(b[1].key),
+            ));
+        } else {
+            service_groups_collection = ALEGROUPCONTROLLER_SERVICE.group_collections;
         }
-        //node.widgets = [];
-        if(node.widgets) {
-            while (node.widgets.length > 0) {
-                node.removeWidget(node.widgets[0]);
-            }
-        }
-        //node.inputs = [];
-        while (node.inputs.length > 0) {
-            node.removeInput(node.inputs.length-1);
-        }
-        reevaluate_value = true;
-        node._groupSignature = signature;
-    }
 
-    const group_alternate = parseSets(node.properties?.[ALTERNATE_KEY]  || "");
-
-    
-    let service_groups_collection;
-    if (node.properties?.[SORT_A_KEY]) {
-        service_groups_collection = new Map([...ALEGROUPCONTROLLER_SERVICE.group_collections.entries()].sort(
-                                        (a, b) => ALEGROUPCONTROLLER_SERVICE.ALPHABETICAL_COLLATOR.compare(a[1].title, b[1].title) || a[1].key.localeCompare(b[1].key),
-                                      ));
-    } else {
-        service_groups_collection = ALEGROUPCONTROLLER_SERVICE.group_collections;
-    }
-    if (service_groups_collection.size>0) {
-        node._groupcollected = true;
-    }
-    
-    for(const [gkey, gval] of service_groups_collection) {
-        // skip exclude groups (using regexp, i.e : ^Sampler #$
-        try {
-            if (((node.properties?.[MATCH_KEY].trim().length>0) && (!new RegExp(node.properties?.[MATCH_KEY], "i").exec(gval.title))) ||
-                ((node.properties?.[EXCLUDE_KEY].trim().length>0) && (new RegExp(node.properties?.[EXCLUDE_KEY], "i").exec(gval.title)))) {
-              continue;
-            }
-        } catch (e) {
-          continue;
+        if (service_groups_collection.size > 0) {
+            node._groupcollected = true;
         }
-        if(!node.widgets || !node.widgets.find((w) => w.options.title === gval.title)) {
-            const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
-            /*
-            const link_num = prev_connections.find((p)=>p.widgets.name===gval.title)?._link || null;
-            node.addInput(gval.title, "BOOLEAN");
-            const slot = node.inputs.length-1;
-            if(link_num!==null) {
-                node.inputs[slot].link = link_num;
-                node.graph.getLink(link_num).target_slot = slot;
-            }
-            node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
-            */
-            node.addInput(gval.title, "BOOLEAN");
-            const slot = node.inputs.length-1;
-            node.inputs[slot].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
-            
-            let prev_connection = prev_connections.find((c)=>c.name==gval.title);
-            if(prev_connection) {
-                const linkId = node.graph.last_link_id++;
-                node.graph.links[linkId] = new LiteGraph.LLink(linkId,"BOOLEAN", prev_connection.origin_id, prev_connection.origin_slot, node.id, slot);
-                //node.inputs[slot].link = linkId;
-                if(prev_connection.origin_id<0)
-                {
-                    node.graph._rootGraph.getNodeById(prev_connection.subgraph_id).subgraph.inputs[prev_connection.origin_slot].linkIds.push(linkId);
-                    const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(node.graph.links[linkId], node.graph);
-                    syncPromotedWidgetCallback(upstreamWidget, boolWidget);
-                    ///node.graph.inputs[prev_connection.origin_slot].linkIds = [linkId];
-                    //const subgraphNode = node.graph._rootGraph.getNodeById(prev_connection.subgraph_id);
-                    //const subgraphWidget = addBooleanWidgetToNode(subgraphNode, gval.title, gval.value, gval.key);
-                    //subgraphNode.inputs[prev_connection.origin_slot].widget = {  name : gval.title, _hash_ref : subgraphWidget._hash_ref };
-                }
-            }
-            
 
-            /*
-            
-            node.graph._rootGraph.getNodeById(6).subgraph.links[9] = new LiteGraph.LLink(9,"BOOLEAN", "-10", 0, "5", 0)
-            node.graph._rootGraph.getNodeById(6).subgraph.inputs[0].linkIds = [9]
-            node.inputs[0].link = 9
-            node.graph.setDirtyCanvas(true, true)
-            
-            */
-            //const newLink = [linkId, 0, 0, 5, 0, "BOOLEAN"];
-            //node.graph._rootGraph.getNodeById(6).subgraph.links[linkId] = newLink;
-            //node.graph.links[linkId] = newLink;
-            
-            /*
-            if (saved_conn) {
-                let upstream_node = null;
-                // Find the original upstream node object in the graph
-                if(saved_conn.subgraph_id)
-                {
-                    subgraphInputSlotIndex = node.graph.inputs.findIndex(inp => inp.name === saved_conn.name);
-                    upstream_node = node.graph._rootGraph.getNodeById(saved_conn.subgraph_id)
-                } else {
-                    upstream_node = node.graph.getNodeById(saved_conn.origin_id);
-                }
-                
-                if (upstream_node) {
-                    // Connect the upstream node's output slot to THIS node's new input slot
-                    upstream_node.connect(saved_conn.origin_slot, node.id, node.inputs.length-1);
-                }
-            }
-            */
-            updated = true;
-        }
-        /*
-        if(!node.widgets || !node.widgets.find((w) => w.name === gval.title)) {
-            //if ((!node.widgets && !node.inputs.length) || (node.widgets && node.widgets.length===node.inputs.length)){
-            //  node.addInput(val.title, "BOOLEAN");
-            //}
-            if(prev_inputs.length===0) node.addInput(val.title, "BOOLEAN");
-            const boolWidget = addBooleanWidgetToNode(node, gval);
-        */
-          /*
-          const boolWidget = node.addWidget(
-            "toggle",
-            val.title,
-            (val.value===MODE_BYPASS) ? true : false,
-            (value) => {
-              // Optional: callback when toggle changes
-              const mode_val = (value===true) ? MODE_BYPASS : LiteGraph.ALWAYS;
-              const gc = ALEGROUPCONTROLLER_SERVICE.group_collections.get(key);
-              gc.value = mode_val;
-              ALEGROUPCONTROLLER_SERVICE.updateNodeInsideGroupByTitle(gc.title, mode_val);
-            },
-            { serialize: true }
-          );
-          // This hides the checkbox/toggle UI when a link wire is attached.
-          */
-          //node.inputs[node.inputs.length - 1].widget = boolWidget;
-          //node.inputs[node.inputs.length - 1].widget = JSON.parse(JSON.stringify(boolWidget, (key, value) => key === '_node' ? undefined : value));
-        /*
-          node.inputs[node.inputs.length - 1].widget = {  name : gval.title, _hash_ref : boolWidget._hash_ref };
-              
-          updated = true;
-        } 
-        */
-      }
-
-    /*
-  if(node.widgets) {
-    for(const widget of node.widgets) {
-      if(widget._inputslot_origin_id) {
-         //var upstreamNode;
-         //var upstreamWidget;
-        try {
-        //upstreamNode = app.graph.getNodeById(widget._inputslot_origin_id);
-        let upstreamNode = findNodeInAllGraphs(app.graph, widget._inputslot_origin_id);
-        const upstreamWidget = upstreamNode.widgets?.[0] || upstreamNode.widgets?.find(w => w.type === "toggle" || w.name === "value");
-         if (upstreamWidget && typeof upstreamWidget.value !== undefined) {
-           const upstreamValue = upstreamWidget.value;
-           if(widget.value!=upstreamValue) {
-             widget.value=upstreamValue;
-             updated = true;
-            if (typeof widget.callback === "function") {
-                widget.callback(upstreamValue);
-            }
-           }
-         }
-        }catch(e) {
-          console.log('a');
-        }
-      }
-    }
-  }
-  */
-    var seen = [];
-    if(node.inputs.length>0) {
-        /*
-        for(const link of  [...node.graph.links.values()].filter(m => m.target_id===node.id)) {
-            // upstreamWidget = getUpstreamWidgetById(link, this.graph);
-            if (!node.inputs[link.target_slot]) {
-                node.graph.removeLink(link.id);
-                continue;
-            }
-            let input_widget;
+        // Compute the current desired set of titles based on match/exclude filters
+        const desiredEntries = new Map(); // title -> gval
+        for (const [gkey, gval] of service_groups_collection) {
             try {
-  //              input_widget = node.inputs[link.target_slot].widget;
+                if (((node.properties?.[MATCH_KEY]?.trim().length > 0) && (!new RegExp(node.properties?.[MATCH_KEY], "i").exec(gval.title))) ||
+                    ((node.properties?.[EXCLUDE_KEY]?.trim().length > 0) && (new RegExp(node.properties?.[EXCLUDE_KEY], "i").exec(gval.title)))) {
+                    continue;
+                }
             } catch (e) {
                 continue;
             }
-            if(!input_widget) continue;            
-            const localWidget = node.widgets?.find((w)=>w.name===input_widget.name && w._hash_ref===input_widget._hash_ref);
-            const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link, node.graph);
-            if(upstreamWidget && localWidget) {
-                if (localWidget.value!=upstreamWidget.value || (reevaluate_value && group_alternate.has(localWidget.title))) {
-                    seen.push(localWidget.name);
-                    setWidgetValue(localWidget, upstreamWidget.value);
-                    updated = true;
-                */
-                /*
-               localWidget.value = upstreamWidget.value;
-               if (typeof localWidget.callback === "function") {
-                    localWidget.callback(upstreamWidget.value);
-                    updated = true;
-                }
-                *//*
-                }
-            }
-        }*/
-        /*
-        if(reevaluate_value) {
-            for(const widget of node.widgets) {
-                if(group_alternate.has(widget.name) && (!seen.includes(widget.name))) {                    
-                    setWidgetValue(widget, widget.value);
+            desiredEntries.set(gval.title, gval);
+        }
+
+        // 1. REMOVE widgets/inputs for groups that no longer pass the filter
+        if (node.widgets) {
+            for (let i = node.widgets.length - 1; i >= 0; i--) {
+                const title = node.widgets[i].options?.title ?? node.widgets[i].name;
+                if (!desiredEntries.has(title)) {
+                    node.removeWidget(node.widgets[i]);
                     updated = true;
                 }
             }
         }
-        */
-    }
+        if (node.inputs) {
+            for (let i = node.inputs.length - 1; i >= 0; i--) {
+                if (!desiredEntries.has(node.inputs[i].name)) {
+                    node.removeInput(i);
+                    updated = true;
+                }
+            }
+        }
 
-  if(updated) {
-    //node.setSize([node.size[0], node.computeSize()[1]]);
-    //node.setSize(node.computeSize());
-    app.graph?.setDirtyCanvas?.(true, true);
-  }
+        // 2. ADD widgets/inputs only for genuinely new groups (existing ones untouched -> links survive)
+        for (const [title, gval] of desiredEntries) {
+            const alreadyExists = node.widgets?.some((w) => (w.options?.title ?? w.name) === title);
+            if (!alreadyExists) {
+                const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
+                node.addInput(gval.title, "BOOLEAN");
+                const slot = node.inputs.length - 1;
+                node.inputs[slot].widget = { name: gval.title, _hash_ref: boolWidget._hash_ref };
+                updated = true;
+                // No reconnect needed here: a brand-new input never had a prior link.
+            }
+        }
+
+        // 3. Sync promotion for every currently-linked input (idempotent — safe every pass)
+        if (node.inputs) {
+            for (const input of node.inputs) {
+                if (input.link == null) continue;
+                const link_info = node.graph.links.get(input.link); // links is a Map
+                if (!link_info) continue;
+
+                const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, node.graph);
+                const localWidget = node.widgets?.find((w) => w._hash_ref === input.widget?._hash_ref);
+                if (upstreamWidget && localWidget) {
+                    syncPromotedWidgetCallback(upstreamWidget, localWidget);
+                }
+            }
+        }
+
+        if (updated) {
+            app.graph?.setDirtyCanvas?.(true, true);
+        }
+    } finally {
+        node._refreshInProgress = false;
+        setTimeout(() => refreshWidgets(node), 100);
     }
-  node._refreshInProgress = false;
-  setTimeout(() => {
-    refreshWidgets(node);
-  }, 100);
-  
 }
 
 function setWidgetValue(widget, value=null) {
