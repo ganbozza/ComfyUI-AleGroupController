@@ -483,6 +483,20 @@ api.addEventListener("my_custom_node_finished", (event) => {
     }
 });
 */
+function findOwningSubgraphNode(rootGraph, targetGraph) {
+    function search(graph) {
+        for (const n of graph.nodes) {
+            if (n.subgraph === targetGraph) return { node: n, graph };
+            if (n.subgraph) {
+                const found = search(n.subgraph);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+    return search(rootGraph);
+}
+
 function findParentSubgraphNode(node) {
     if (node.graph && node.graph._subgraph_node) {
         return node.graph._subgraph_node;
