@@ -11,18 +11,19 @@ function toKey(title) {
   return normalizeTitle(title).toLowerCase();
 }
 
+// Recursively find which node (at any subgraph depth) owns a given graph
 function findOwningSubgraphNode(rootGraph, targetGraph) {
-  function search(graph) {
-      for (const n of graph.nodes) {
-          if (n.subgraph === targetGraph) return { node: n, graph };
-          if (n.subgraph) {
-              const found = search(n.subgraph);
-              if (found) return found;
-          }
-      }
-      return null;
-  }
-  return search(rootGraph);
+    function search(graph) {
+        for (const n of graph.nodes) {
+            if (n.subgraph === targetGraph) return { node: n, graph };
+            if (n.subgraph) {
+                const found = search(n.subgraph);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+    return search(rootGraph);
 }
 
 class AleGroupControllerService {
@@ -230,13 +231,13 @@ class AleGroupControllerService {
     }
   
     getUpstreamWidgetByLink(link, graphContext) {
-        if (link.origin_id > 0) {
-            return graphContext.getNodeById(link.origin_id)?.inputs[link.origin_slot]?.widget;
-        } else {
-            const owner = findOwningSubgraphNode(graphContext.rootGraph, graphContext);
-            return owner?.node.inputs[link.origin_slot]?.widget;
-        }
-    }    
+      if (link.origin_id > 0) {
+        return graphContext.getNodeById(link.origin_id)?.inputs[link.origin_slot]?.widget;
+      } else {
+          const owner = findOwningSubgraphNode(graphContext.rootGraph, graphContext);
+          return owner?.node.inputs[link.origin_slot]?.widget;
+      }
+    }
   }
   
 
