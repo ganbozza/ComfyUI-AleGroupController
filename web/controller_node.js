@@ -166,75 +166,104 @@ function refreshWidgets(node) {
         } else {
             service_groups_collection = ALEGROUPCONTROLLER_SERVICE.group_collections;
         }
+        if (service_groups_collection.size > 0) node._groupcollected = true;
 
-        if (service_groups_collection.size > 0) {
-            node._groupcollected = true;
-        }
-
-        // Compute the current desired set of titles based on match/exclude filters
-        const desiredEntries = new Map(); // title -> gval
+        // Desired final order
+        const desiredOrder = [];
         for (const [gkey, gval] of service_groups_collection) {
             try {
                 if (((node.properties?.[MATCH_KEY]?.trim().length > 0) && (!new RegExp(node.properties?.[MATCH_KEY], "i").exec(gval.title))) ||
                     ((node.properties?.[EXCLUDE_KEY]?.trim().length > 0) && (new RegExp(node.properties?.[EXCLUDE_KEY], "i").exec(gval.title)))) {
                     continue;
                 }
-            } catch (e) {
-                continue;
-            }
-            desiredEntries.set(gval.title, gval);
+            } catch (e) { continue; }
+            desiredOrder.push(gval);
         }
+        const desiredTitles = new Set(desiredOrder.map(g => g.title));
 
-        // 1. REMOVE widgets/inputs for groups that no longer pass the filter
-        if (node.widgets) {
-            for (let i = node.widgets.length - 1; i >= 0; i--) {
-                const title = node.widgets[i].options?.title ?? node.widgets[i].name;
-                if (!desiredEntries.has(title)) {
-                    node.removeWidget(node.widgets[i]);
-                    updated = true;
-                }
-            }
-        }
-        if (node.inputs) {
-            for (let i = node.inputs.length - 1; i >= 0; i--) {
-                if (!desiredEntries.has(node.inputs[i].name)) {
-                    node.removeInput(i);
-                    updated = true;
-                }
+        // PHASE 1: remove filtered-out groups via engine methods (handles disconnects safely)
+        for (let i = node.inputs.length - 1; i >= 0; i--) {
+            if (!desiredTitles.has(node.inputs[i].name)) {
+                const w = node.widgets?.find(w => (w.options?.title ?? w.name) === node.inputs[i].name);
+                if (w) node.removeWidget(w);
+                node.removeInput(i);
+                updated = true;
             }
         }
 
-        // 2. ADD widgets/inputs only for genuinely new groups (existing ones untouched -> links survive)
-        for (const [title, gval] of desiredEntries) {
-            const alreadyExists = node.widgets?.some((w) => (w.options?.title ?? w.name) === title);
-            if (!alreadyExists) {
+        // Snapshot survivors AFTER removal
+        const survivorIndexByTitle = new Map();
+        node.inputs.forEach((input, idx) => survivorIndexByTitle.set(input.name, idx));
+
+        // PHASE 2: compute final desired index for every survivor
+        const oldToNewSlot = new Map();
+        let orderChanged = false;
+        desiredOrder.forEach((gval, finalIdx) => {
+            if (survivorIndexByTitle.has(gval.title)) {
+                const oldIdx = survivorIndexByTitle.get(gval.title);
+                oldToNewSlot.set(oldIdx, finalIdx);
+                if (oldIdx !== finalIdx) orderChanged = true;
+            }
+        });
+
+        // PHASE 3: patch target_slot on affected links BEFORE moving objects
+        // ⚠️ VERIFY: confirm removeInput() above doesn't already shift target_slot
+        // for survivors, or this will double-shift. Test per the checklist below.
+        if (orderChanged) {
+            for (const link of node.graph.links.values()) {
+                if (link.target_id === node.id && oldToNewSlot.has(link.target_slot)) {
+                    link.target_slot = oldToNewSlot.get(link.target_slot);
+                }
+            }
+            updated = true;
+        }
+
+        // PHASE 4: rebuild inputs/widgets in final order (reuse survivor refs)
+        const newInputs = new Array(desiredOrder.length);
+        const newWidgets = [];
+        const currentInputs = node.inputs.slice();
+        const currentWidgetByTitle = new Map((node.widgets || []).map(w => [(w.options?.title ?? w.name), w]));
+
+        desiredOrder.forEach((gval, finalIdx) => {
+            const oldIdx = survivorIndexByTitle.get(gval.title);
+            if (oldIdx !== undefined) {
+                newInputs[finalIdx] = currentInputs[oldIdx];
+                const w = currentWidgetByTitle.get(gval.title);
+                if (w) newWidgets.push(w);
+            } else {
                 const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
                 node.addInput(gval.title, "BOOLEAN");
-                const slot = node.inputs.length - 1;
-                node.inputs[slot].widget = { name: gval.title, _hash_ref: boolWidget._hash_ref };
+                const addedInput = node.inputs[node.inputs.length - 1];
+                addedInput.widget = { name: gval.title, _hash_ref: boolWidget._hash_ref };
+                node.inputs.pop();
+                newInputs[finalIdx] = addedInput;
+                newWidgets.push(boolWidget);
                 updated = true;
-                // No reconnect needed here: a brand-new input never had a prior link.
             }
+        });
+        newWidgets.sort((a, b) => {
+            const ta = a.options?.title ?? a.name, tb = b.options?.title ?? b.name;
+            return desiredOrder.findIndex(g => g.title === ta) - desiredOrder.findIndex(g => g.title === tb);
+        });
+
+        node.inputs = newInputs;   // setter splices into _inputs in place
+        node.widgets = newWidgets; // plain property, direct assign confirmed safe
+
+        // _inputs setter does NOT refresh _concreteInputs — must do it ourselves
+        node._setConcreteSlots();
+        node._arrangeWidgetInputSlots();
+
+        // PHASE 5: re-sync promotion for every still-linked input (idempotent, any depth)
+        for (const input of node.inputs) {
+            if (input.link == null) continue;
+            const link_info = node.graph.links.get(input.link); // links is a Map
+            if (!link_info) continue;
+            const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, node.graph);
+            const localWidget = node.widgets.find(w => w._hash_ref === input.widget?._hash_ref);
+            if (upstreamWidget && localWidget) syncPromotedWidgetCallback(upstreamWidget, localWidget);
         }
 
-        // 3. Sync promotion for every currently-linked input (idempotent — safe every pass)
-        if (node.inputs) {
-            for (const input of node.inputs) {
-                if (input.link == null) continue;
-                const link_info = node.graph.links.get(input.link); // links is a Map
-                if (!link_info) continue;
-
-                const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, node.graph);
-                const localWidget = node.widgets?.find((w) => w._hash_ref === input.widget?._hash_ref);
-                if (upstreamWidget && localWidget) {
-                    syncPromotedWidgetCallback(upstreamWidget, localWidget);
-                }
-            }
-        }
-
-        if (updated) {
-            app.graph?.setDirtyCanvas?.(true, true);
-        }
+        if (updated) app.graph?.setDirtyCanvas?.(true, true);
     } finally {
         node._refreshInProgress = false;
         setTimeout(() => refreshWidgets(node), 100);
