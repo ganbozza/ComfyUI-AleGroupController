@@ -536,7 +536,7 @@ app.registerExtension({
           // 'side' or 'type': 1 = Input (Left side), 2 = Output (Right side)
           // 'connect': true if a wire was plugged in, false if a wire was removed
           if (side === 1 && this.inputs[slot] && output.widget && output.widget._hash_ref) {
-              this.inputs[slot].widget = { name: this.inputs[slot].name, _hash_ref : output.widget._hash_ref };
+             // this.inputs[slot].widget = { name: this.inputs[slot].name, _hash_ref : output.widget._hash_ref };
               if(connect && link_info) {
                   /*
                 const localWidget = this.widgets[link_info.target_slot];
