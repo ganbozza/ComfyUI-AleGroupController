@@ -266,7 +266,7 @@ function refreshWidgets(node) {
         if (updated) app.graph?.setDirtyCanvas?.(true, true);
     } finally {
         node._refreshInProgress = false;
-        setTimeout(() =>  requestAnimationFrame(() => { refreshWidgets(node); });, 100);
+        setTimeout(() =>  requestAnimationFrame(() => { refreshWidgets(node); }), 100);
     }
 }
 
