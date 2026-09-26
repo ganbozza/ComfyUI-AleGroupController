@@ -101,6 +101,7 @@ class AleGroupControllerService {
         });
       console.log("A new group is being added to the collection.");
     }
+  }
     
   syncNodesWidgetValue(ms=300) {
       if(this._updatingWidget>0) return;
@@ -214,14 +215,15 @@ class AleGroupControllerService {
         console.log("Removing node...");
     }
   
-getUpstreamWidgetByLink(link, graphContext) {
-    if (link.origin_id > 0) {
-        return graphContext.getNodeById(link.origin_id)?.inputs[link.origin_slot]?.widget;
-    } else {
-        const owner = findOwningSubgraphNode(graphContext.rootGraph, graphContext);
-        return owner?.node.inputs[link.origin_slot]?.widget;
+    getUpstreamWidgetByLink(link, graphContext) {
+        if (link.origin_id > 0) {
+            return graphContext.getNodeById(link.origin_id)?.inputs[link.origin_slot]?.widget;
+        } else {
+            const owner = findOwningSubgraphNode(graphContext.rootGraph, graphContext);
+            return owner?.node.inputs[link.origin_slot]?.widget;
+        }
     }
-}
+  }
   
 
 export const ALEGROUPCONTROLLER_SERVICE = new AleGroupControllerService();
