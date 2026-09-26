@@ -11,6 +11,20 @@ function toKey(title) {
   return normalizeTitle(title).toLowerCase();
 }
 
+function findOwningSubgraphNode(rootGraph, targetGraph) {
+  function search(graph) {
+      for (const n of graph.nodes) {
+          if (n.subgraph === targetGraph) return { node: n, graph };
+          if (n.subgraph) {
+              const found = search(n.subgraph);
+              if (found) return found;
+          }
+      }
+      return null;
+  }
+  return search(rootGraph);
+}
+
 class AleGroupControllerService {
   constructor() {
     this.initialized = false;
@@ -222,20 +236,7 @@ class AleGroupControllerService {
             const owner = findOwningSubgraphNode(graphContext.rootGraph, graphContext);
             return owner?.node.inputs[link.origin_slot]?.widget;
         }
-    }
-    function findOwningSubgraphNode(rootGraph, targetGraph) {
-      function search(graph) {
-          for (const n of graph.nodes) {
-              if (n.subgraph === targetGraph) return { node: n, graph };
-              if (n.subgraph) {
-                  const found = search(n.subgraph);
-                  if (found) return found;
-              }
-          }
-          return null;
-      }
-      return search(rootGraph);
-    }
+    }    
   }
   
 
