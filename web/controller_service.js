@@ -29,33 +29,7 @@ class AleGroupControllerService {
       if (self.initialized) return;
       self.initialized = true;
 
-    /*
-    // 1. Capture the original LiteGraph layout instantiation method safely
-      const origGraphAdd = LGraph.prototype.add;
-    // 2. Override the baseline graph prototype globally
-      LGraph.prototype.add = function(obj, ...args) {
-          //3. Run the native instantiation system first to ensure LiteGraph registers the object properties
-          const result = origGraphAdd.apply(this, arguments);
-  
-        if (obj && obj.constructor && obj.constructor.name === "LGraphGroup") {
-            self.addGroupToCollection(obj);            
-        }
-          
-        return result;
-      };
-      */
-      /*
-        const origGraphRemove = LGraph.prototype.remove;
-      LGraph.prototype.remove = function(obj, ...args) {
-          const result = origGraphRemove.apply(this, arguments);
-  
-        if (obj && obj.constructor && obj.constructor.name === "LGraphGroup") {
-            self.removeGroupFromCollection(obj);            
-        }
-          
-        return result;
-      };
-     */
+
       // Intercept LiteGraph drawing loop
       
       const origDraw = LGraphCanvas.prototype.draw;
@@ -81,11 +55,6 @@ class AleGroupControllerService {
         return origDraw.apply(this, args);
       };
 
-      //this.available_groups = self.getAllGroups();
-      //for (const group of this.available_groups.filter((item, index, self) => self.findIndex(t => t.title === item.title) === index) /* contains unique array*/) {
-      //    // add group to collection
-      //    self.addGroupToCollection(group);
-      //}
 
     console.log("AleGroupController_Service initialized...");
   }
@@ -132,25 +101,7 @@ class AleGroupControllerService {
         });
       console.log("A new group is being added to the collection.");
     }
-  /*
-    if (this.group_collections.get(key).value === MODE_BYPASS) { // ignore if group already in active state
-      this.group_collections.get(key).value =  (this.processNodeInsideGroup(group, MODE_BYPASS)) ? MODE_ACTIVE : MODE_BYPASS;
-    }
-  */  
-  }
-  /*
-  removeGroupFromCollection(group) {
-    const title = normalizeTitle(group.title);
-    if(!title) { 
-      return; 
-    }
-    this.available_groups.splice(this.available_groups.indexOf(group.title), 1)
-    this.group_collections = this.available_groups.filter((item, index, self) => self.findIndex(t => t.title === item.title) === index);
-    console.log("Group has been removed from collection.");
-
-  }
-  */
-  
+    
   syncNodesWidgetValue(ms=300) {
       if(this._updatingWidget>0) return;
       this._updatingWidget++;
@@ -190,20 +141,7 @@ class AleGroupControllerService {
     }    
   
     processGroupCollection(available_groups) {
-      /*
-      if(this.group_collections.size > available_groups.length) {
-        const ag_titles = [];
-        for (const ag of available_groups) {
-          ag_titles.push(ag.title);
-        }
-        for (const [key, val] of this.group_collections) {
-          if(!ag_titles.includes(val.title)) {
-            this.group_collections.delete(key);              
-            console.log("Group removed from collection...");
-          }
-        }
-      }
-      */
+     
       // sync state in group_collections with group's node mode
       for (const [key, val] of this.group_collections) {
         val.hasActiveNodes = false;
@@ -229,17 +167,7 @@ class AleGroupControllerService {
 
     }
       
-    /*
-    updateNodeInsideGroupByTitle(title, mode) {
-       const available_groups = app.graph?._groups || [];
-       for (const group of available_groups) {
-          if(normalizeTitle(group.title)===title) {
-              this.processNodeInsideGroup(group, mode, true);
-          }
-       }
-    }
-    */
-  
+      
     processNodeInsideGroup(group, mode, is_set=false) {
          if (app.canvas.isDragging)
             return;
@@ -267,16 +195,10 @@ class AleGroupControllerService {
         }catch(e) {
           console.log('e');
         }
-        //if(!is_set)
-        //  console.log("all bypassed...");
         return false;
     }
   
-    /*
-    getGroupNodes(group) {
-        return Array.from(group._children).filter((c) => c instanceof LGraphNode);
-    }
-    */
+
     
     registerNode(node) {
       if(this.nodes.has(node)) {
@@ -292,61 +214,6 @@ class AleGroupControllerService {
         console.log("Removing node...");
     }
   
-    /*
-    // Helper: Find which canvas group contains a node's position coordinates
-    getGroupContainingNode(node) {
-        const groups = app.graph?._groups || [];
-        const [nX, nY] = node.pos;
-
-        for (let i = groups.length - 1; i >= 0; i--) {
-            const group = groups[i];
-            const [gX, gY] = group.pos;
-            const [gW, gH] = group.size;
-
-            if (nX >= gX && nX <= gX + gW && nY >= gY && nY <= gY + gH) {
-                return group;
-            }
-        }
-        return null;
-    }
-
-    // Main Engine: Scan controllers, find their groups, and toggle nested nodes
-    updateAllGroupsState() {
-        if (!app.graph) return;
-
-        this.nodes.forEach(node => {
-            const targetGroup = this.getGroupContainingNode(node);
-            if (!targetGroup) return;
-
-            // Get target operational state from the node's widget value
-            // Custom state logic: "Active" (0), "Mute" (2), "Bypass" (4)
-            const targetMode = node.widgets[0].value; 
-            
-            const [gX, gY] = targetGroup.pos;
-            const [gW, gH] = targetGroup.size;
-            const allNodes = app.graph._nodes || [];
-
-            allNodes.forEach(_node => {
-                // Ignore the controller itself to prevent infinite logic loops
-                if (_node === node) return;
-
-                const [nX, nY] = _node.pos;
-                const isInside = nX >= gX && nX <= gX + gW && nY >= gY && nY <= gY + gH;
-
-                if (isInside) {
-                    const currentMode = _node.mode ?? 0;
-                    if (currentMode !== targetMode) {
-                        _node.mode = targetMode;
-                        _node.setDirtyCanvas(true, true);
-                    }
-                }
-            });
-        });
-    }
-    */
-  
-  // inputs[1]._subgraphSlot.linkIds (subgraph punya input yg related dgn link id) dari link id tu boleh tgh node target_id & target_slot
-  // one liner : [...app.graph._nodes.values()].filter(m => m.subgraph).find((m) => m.subgraph.links === app.graph.nodes[2].subgraph.links).inputs.find((i)=>i._subgraphSlot.linkIds.find(li => li===2))
   getUpstreamWidgetByLink(link, graphContext) {
     if(link.origin_id>0) {
         return graphContext.getNodeById(link.origin_id)?.inputs[link.origin_slot].widget;
@@ -354,60 +221,6 @@ class AleGroupControllerService {
       return [...graphContext._rootGraph._nodes.values()].filter(n => n.subgraph).find((n) => [...n.subgraph.links.values()].find((l)=>l===link))?.inputs[link.origin_slot].widget;
     }
   }
-  getUpstreamWidgetByLinka(link, graphContext) {
-      /*
-      if(link.origin_id>0) {
-          const upstreamNode = graphContext.getNodeById(link.origin_id);
-          const next_link =  [...graphContext.links.values()].filter(m => m.target_id===upstreamNode.id);
-          if(next_link)
-              return getUpstreamNodeById(next_link, graphContext);
-          return upstreamNode;
-      }
-      */
-      if(link.origin_id>0) {
-          const nextUpstreamLink = [...graphContext.links.values()].find(m => m.target_id===link.origin_id)
-          if(nextUpstreamLink)
-              return this.getUpstreamWidgetByLink(nextUpstreamLink, graphContext);
-          return graphContext.getNodeById(link.origin_id).widgets[link.origin_slot];
-      } 
-      // upstream is subgraph
-      return this.getUpstreamWidgetInSubgraphByLink(link, graphContext._rootGraph);
-  }
   
-  getUpstreamWidgetInSubgraphByLinka(link, graphContext) {
-      const upstreamSubgraph = [...graphContext._nodes.values()].filter(n => n.subgraph).find((n) => [...n.subgraph.links.values()].find((l)=>l===link))?.subgraph;
-      if(upstreamSubgraph) {
-        // takyah kut ni : const inputSlot = inputs.find((i)=>i._subgraphSlot.linkIds.find(li => li===link.id))
-        const nextUpstreamLink = upstreamSubgraph.inputs[link.origin_slot].link;
-        if (nextUpstreamLink) {
-            return this.getUpstreamWidgetByLink(upstreamSubgraph.graph.links.get(nextUpstreamLink), upstreamSubgraph.graph);
-        }
-        const widgetId = upstreamSubgraph.inputs[link.origin_slot].widgetId;
-        return upstreamSubgraph.widgets.find((w)=>w.widgetId===upstreamSubgraph.inputs[link.origin_slot].widgetId);
-      }
-      /*
-      [...app.graph._nodes.values()].filter(m => m.subgraph).find((m) => m.subgraph.links === app.graph.nodes[2].subgraph.links).inputs.find((i)=>i._subgraphSlot.linkIds.find(li => li===link.id))
-      if(graphContext.links===link) {
-        const subgraphNode = [...app.graph.nodes.values()].filter(m => m.subgraph).find((m) => m.subgraph.links === link);
-        return graphContext;
-      }
-      
-      // Iterate through all nodes on this level to find subgraphs
-      if (graphContext._nodes) {
-        for (const node of graphContext._nodes) {
-          // Check if the node contains an internal nested subgraph
-          if (node.subgraph && node.subgraph instanceof LGraph) {    
-              // Recurse into the sub-graph layer and merge the results
-              const upstreamWidget = findWidgetInSubgraphByLink(link, node.subgraph);
-              if(upstreamWidget) {
-                  return upstreamWidget;
-              }
-          }
-        }
-      }
-      */
-      return null;
-  }
-}
 
 export const ALEGROUPCONTROLLER_SERVICE = new AleGroupControllerService();
