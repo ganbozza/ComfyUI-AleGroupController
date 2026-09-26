@@ -269,7 +269,7 @@ function refreshWidgets(node) {
         node._refreshInProgress = false;
         setTimeout(() => refreshWidgets(node), 100);
     }
-}
+});
 }
 
 function setWidgetValue(widget, value=null) {
