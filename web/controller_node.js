@@ -152,6 +152,7 @@ function parseSets(str) {
 
 function refreshWidgets(node) {
     if (node._refreshInProgress) return;
+ requestAnimationFrame(() => {    
     node._refreshInProgress = true;
     let updated = false;
 
@@ -266,8 +267,9 @@ function refreshWidgets(node) {
         if (updated) app.graph?.setDirtyCanvas?.(true, true);
     } finally {
         node._refreshInProgress = false;
-        setTimeout(() =>  requestAnimationFrame(() => { refreshWidgets(node); }), 100);
+        setTimeout(() => refreshWidgets(node), 100);
     }
+}
 }
 
 function setWidgetValue(widget, value=null) {
