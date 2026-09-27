@@ -219,28 +219,72 @@ function refreshWidgets(node) {
         const survivorIndexByTitle = new Map();
         node.inputs.forEach((input, idx) => survivorIndexByTitle.set(input.name, idx));
 
-        // PHASE 2: compute final desired index for every survivor
-        const oldToNewSlot = new Map();
-        let orderChanged = false;
-           desiredOrder.forEach((gval, finalIdx) => {
-                if (survivorIndexByTitle.has(gval.title)) {
-                    const oldIdx = survivorIndexByTitle.get(gval.title);
-                    oldToNewSlot.set(oldIdx, finalIdx);
-                    if (oldIdx !== finalIdx) orderChanged = true;
-                }
-            });
+        // PHASE 2 (replaces the old reorder-with-target_slot-patch approach entirely)
 
-        // PHASE 3: patch target_slot on affected links BEFORE moving objects
-        // ⚠️ VERIFY: confirm removeInput() above doesn't already shift target_slot
-        // for survivors, or this will double-shift. Test per the checklist below.
-        if (orderChanged) {
-            for (const link of node.graph.links.values()) {
-                if (link.target_id === node.id && oldToNewSlot.has(link.target_slot)) {
-                    link.target_slot = oldToNewSlot.get(link.target_slot);
-                }
+        // Partition survivors: anything currently linked is FROZEN at its current index —
+        // we never touch its position or its link's target_slot again. Only unlinked
+        // survivors and brand-new groups get placed into whatever indices remain.
+        const pinnedIndices = new Set();      // indices locked by a linked survivor
+        const pinnedTitleByIndex = new Map(); // index -> title, for the pinned ones
+        node.inputs.forEach((input, idx) => {
+            if (input.link != null) {
+                pinnedIndices.add(idx);
+                pinnedTitleByIndex.set(idx, input.name);
             }
-            updated = true;
+        });
+        
+        const finalLength = desiredOrder.length;
+        const newInputs = new Array(finalLength);
+        const newWidgets = new Array(finalLength);
+        const currentInputs = node.inputs.slice();
+        const currentWidgetByTitle = new Map((node.widgets || []).map(w => [(w.options?.title ?? w.name), w]));
+        
+        // Place every pinned (linked) survivor at its EXACT current index, untouched.
+        // If a pinned index falls outside the new final length (shouldn't normally
+        // happen unless groups were removed), that survivor gets appended instead.
+        for (const [idx, title] of pinnedTitleByIndex) {
+            const targetIdx = idx < finalLength ? idx : newInputs.length; // safety fallback
+            newInputs[targetIdx] = currentInputs[idx];
+            newWidgets[targetIdx] = currentWidgetByTitle.get(title);
         }
+        
+        // Fill every remaining (non-pinned) final slot, in desiredOrder's sorted
+        // sequence, skipping titles already placed above.
+        const placedTitles = new Set([...pinnedTitleByIndex.values()]);
+        let cursor = 0;
+        for (const gval of desiredOrder) {
+            if (placedTitles.has(gval.title)) continue;
+            while (newInputs[cursor] !== undefined) cursor++; // find next free slot
+            const survivorIdx = node.inputs.findIndex(i => i.name === gval.title); // unlinked survivor?
+            if (survivorIdx !== -1) {
+                newInputs[cursor] = currentInputs[survivorIdx];
+                let w = currentWidgetByTitle.get(gval.title);
+                if (!w) {
+                    w = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
+                    newInputs[cursor].widget = { name: gval.title, _hash_ref: w._hash_ref };
+                    updated = true;
+                }
+                newWidgets[cursor] = w;
+            } else {
+                // Genuinely new group
+                const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
+                node.addInput(gval.title, "BOOLEAN");
+                const addedInput = node.inputs[node.inputs.length - 1];
+                addedInput.widget = { name: gval.title, _hash_ref: boolWidget._hash_ref };
+                node.inputs.pop();
+                newInputs[cursor] = addedInput;
+                newWidgets[cursor] = boolWidget;
+                updated = true;
+            }
+            cursor++;
+        }
+        
+        node.inputs = newInputs;
+        node.widgets = newWidgets;
+        node._setConcreteSlots();
+        node._arrangeWidgetInputSlots();
+        // No target_slot patching anywhere — every link keeps the exact slot it had
+
 
         // PHASE 4: rebuild inputs/widgets in final order (reuse survivor refs)
         const newInputs = new Array(desiredOrder.length);
