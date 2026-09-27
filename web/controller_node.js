@@ -507,11 +507,13 @@ app.registerExtension({
         
         const originalOnNodeCreated = nodeType.prototype.onNodeCreated;
         nodeType.prototype.onNodeCreated = function () {
-            this.__dbgId = Math.random().toString(36).slice(2, 8);
-            console.log(`[${this.__dbgId}] onNodeCreated fired. graph attached:`, !!this.graph);
+            if (!this.__dbgId) {
+                this.__dbgId = Math.random().toString(36).slice(2, 8); // assign ONCE, ever
+            }
+            console.log(`[${this.__dbgId}] onNodeCreated fired. graph attached:`, !!this.graph, "already initialized:", _initializedNodes.has(this));
             const result = originalOnNodeCreated?.apply(this, arguments);
-            if (_initializedNodes.has(this)) { console.log(`[${this.__dbgId}] already initialized, skipping`); return result; }
-            _initializedNodes.add(this)
+            if (_initializedNodes.has(this)) { return result; }
+            _initializedNodes.add(this);
         
             if (!this.properties || typeof this.properties !== "object") {
                 this.properties = {};
