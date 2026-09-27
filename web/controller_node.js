@@ -452,10 +452,11 @@ app.registerExtension({
         
         const originalOnNodeCreated = nodeType.prototype.onNodeCreated;
         nodeType.prototype.onNodeCreated = function () {
+            this.__dbgId = Math.random().toString(36).slice(2, 8);
+            console.log(`[${this.__dbgId}] onNodeCreated fired. graph attached:`, !!this.graph);
             const result = originalOnNodeCreated?.apply(this, arguments);
-
-             if (_initializedNodes.has(this)) return result;
-            _initializedNodes.add(this);
+            if (_initializedNodes.has(this)) { console.log(`[${this.__dbgId}] already initialized, skipping`); return result; }
+            _initializedNodes.add(this)
         
             if (!this.properties || typeof this.properties !== "object") {
                 this.properties = {};
@@ -476,15 +477,14 @@ app.registerExtension({
 
         const origOnAdded = nodeType.prototype.onAdded;
         nodeType.prototype.onAdded = function(graph) {
+            console.log(`[${this.__dbgId || "??"}] onAdded. widgets:`, this.widgets?.length);
             const result = origOnAdded?.apply(this, arguments);
- 
-            console.log("onAdded...");
             return result;
         };
         
         const originalOnConfigure = nodeType.prototype.onConfigure;
         nodeType.prototype.onConfigure = function (info) {
-            console.log("onConfigure fired. widgets:", this.widgets?.length, "info.widgets_values:", info?.widgets_values);
+            console.log(`[${this.__dbgId || "??"}] onConfigure. widgets:`, this.widgets?.length, "values:", info?.widgets_values, "graph attached:", !!this.graph);
             const result = originalOnConfigure?.apply(this, arguments);
             return result;
         };
