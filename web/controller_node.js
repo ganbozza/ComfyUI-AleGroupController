@@ -152,7 +152,7 @@ function parseSets(str) {
 }
 
 function refreshWidgets(node) {
-    if (node._refreshInProgress) return;
+    if (node._refreshInProgress || node._destroyed) return;
     node._refreshInProgress = true; // set synchronously, immediately — closes the race window
     
     let updated = false;
@@ -321,7 +321,9 @@ if (!collectionCoversAllLinkedInputs) {
         console.error(`[${node.__dbgId||"??"}] refreshWidgets THREW:`, err);
     } finally {
         node._refreshInProgress = false;
-        setTimeout(() => refreshWidgets(node), 100);
+        if (!node._destroyed) {
+            setTimeout(() => refreshWidgets(node), 100);
+        }
     }
 }
 
@@ -342,6 +344,7 @@ function bindNode(node) {
   
   const originalOnRemoved = node.onRemoved;
   node.onRemoved = function () {
+    this._destroyed = true; // signal refreshWidgets' polling loop to stop
     // Clean up service references safely when deleted from canvas
     ALEGROUPCONTROLLER_SERVICE.unregisterNode(this);
     return originalOnRemoved?.apply(this, arguments);
