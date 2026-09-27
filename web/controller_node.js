@@ -151,7 +151,7 @@ function parseSets(str) {
   return group_map;
 }
 
-function refreshWidgets(node) {
+function refreshWidgetsPass(node) {
     if (node._refreshInProgress || node._destroyed) return;
     node._refreshInProgress = true; // set synchronously, immediately — closes the race window
     
@@ -321,9 +321,24 @@ if (!collectionCoversAllLinkedInputs) {
         console.error(`[${node.__dbgId||"??"}] refreshWidgets THREW:`, err);
     } finally {
         node._refreshInProgress = false;
-        if (!node._destroyed) {
-            setTimeout(() => refreshWidgets(node), 100);
-        }
+    }
+}
+
+function refreshWidgets(node) {
+    // Safe to call from multiple lifecycle hooks — always does one
+    // immediate, synchronous pass (guarded against re-entrancy above).
+    refreshWidgetsPass(node);
+
+    // But only ONE recurring polling chain is ever started per node,
+    // no matter how many separate hooks call refreshWidgets().
+    if (!node._pollingStarted && !node._destroyed) {
+        node._pollingStarted = true;
+        const tick = () => {
+            if (node._destroyed) return; // chain stops permanently here
+            refreshWidgetsPass(node);
+            setTimeout(tick, 100);
+        };
+        setTimeout(tick, 100);
     }
 }
 
@@ -528,7 +543,7 @@ app.registerExtension({
             bindNode(this);
             ALEGROUPCONTROLLER_SERVICE.init();
             ALEGROUPCONTROLLER_SERVICE.registerNode(this);
-            //refreshWidgets(this); // safe to call immediately now — it self-guards on node.graph and self-retries
+            refreshWidgets(this); // safe to call immediately now — it self-guards on node.graph and self-retries
             
             return result;
         };
