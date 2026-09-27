@@ -539,9 +539,28 @@ app.registerExtension({
         
         const originalOnConfigure = nodeType.prototype.onConfigure;
         nodeType.prototype.onConfigure = function (info) {
-            console.log(`[${this.__dbgId || "??"}] onConfigure BEFORE. widgets:`, this.widgets?.length, "inputs:", (this.inputs||[]).map(i=>({name:i.name,link:i.link})));
             const result = originalOnConfigure?.apply(this, arguments);
-            console.log(`[${this.__dbgId || "??"}] onConfigure AFTER native configure. widgets:`, this.widgets?.length, "inputs:", (this.inputs||[]).map(i=>({name:i.name,link:i.link})));
+
+            // Immediately attach a real widget to every saved name, using the raw
+            // saved payload directly — do NOT wait on ALEGROUPCONTROLLER_SERVICE's
+            // group_collections, since it's populated asynchronously via a draw()
+            // hook and some native ComfyUI process appears to strip widget-less
+            // inputs before that scan ever completes. A placeholder widget here
+            // just needs to exist; refreshWidgets will reconcile it against the
+            // real service data moments later.
+            const namedValues = info?.widgets_values_named || {};
+            for (const [title, value] of Object.entries(namedValues)) {
+                const alreadyHasWidget = this.widgets?.some(w => (w.options?.title ?? w.name) === title);
+                if (alreadyHasWidget) continue;
+        
+                const input = this.inputs?.find(i => i.name === title);
+                const key = title.trim().toLowerCase(); // matches nameToKey()/toKey() convention used elsewhere
+                const w = addBooleanWidgetToNode(this, title, value, key);
+                if (input) {
+                    input.widget = { name: title, _hash_ref: w._hash_ref };
+                }
+            }
+        
             refreshWidgets(this);
             return result;
         };
