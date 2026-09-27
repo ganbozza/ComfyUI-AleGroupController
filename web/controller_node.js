@@ -525,7 +525,7 @@ app.registerExtension({
             bindNode(this);
             ALEGROUPCONTROLLER_SERVICE.init();
             ALEGROUPCONTROLLER_SERVICE.registerNode(this);
-            refreshWidgets(this); // safe to call immediately now — it self-guards on node.graph and self-retries
+            //refreshWidgets(this); // safe to call immediately now — it self-guards on node.graph and self-retries
             
             return result;
         };
@@ -542,6 +542,7 @@ app.registerExtension({
             console.log(`[${this.__dbgId || "??"}] onConfigure BEFORE. widgets:`, this.widgets?.length, "inputs:", (this.inputs||[]).map(i=>({name:i.name,link:i.link})));
             const result = originalOnConfigure?.apply(this, arguments);
             console.log(`[${this.__dbgId || "??"}] onConfigure AFTER native configure. widgets:`, this.widgets?.length, "inputs:", (this.inputs||[]).map(i=>({name:i.name,link:i.link})));
+            refreshWidgets(this);
             return result;
         };
       
