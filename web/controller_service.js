@@ -238,7 +238,8 @@ class AleGroupControllerService {
       } else {
         const owner = findOwningSubgraphNode(graphContext.rootGraph, graphContext);
         //return owner?.node.inputs[link.origin_slot]?.widget;
-        return owner?.node.widgets[link.origin_slot];
+        //return owner?.node.widgets[link.origin_slot];
+        return owner?.node.widgets.find((w)=>w.widgetId===owner?.node.inputs[link.origin_slot]?.widgetId);
       }
     }
   }
