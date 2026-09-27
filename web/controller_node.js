@@ -449,36 +449,31 @@ app.registerExtension({
         const originalOnNodeCreated = nodeType.prototype.onNodeCreated;
         nodeType.prototype.onNodeCreated = function () {
             const result = originalOnNodeCreated?.apply(this, arguments);
-            if(this.is_configured) return result;
-            
-            this.is_configured = true;
 
-            requestAnimationFrame(() => {
-                if (!this.properties || typeof this.properties !== "object") {
-                    this.properties = {};
-                }
-                if (typeof this.properties[SORT_A_KEY] !== "boolean") {
-                    this.properties[SORT_A_KEY] = true;
-                }
-        
-                if (typeof this.properties[MATCH_KEY] !== "string") {
-                    this.properties[MATCH_KEY] = "";
-                }
-                if (typeof this.properties[ALTERNATE_KEY] !== "string") {
-                    this.properties[ALTERNATE_KEY] = "";
-                }
-                if (typeof this.properties[EXCLUDE_KEY] !== "string") {
-                    this.properties[EXCLUDE_KEY] = "";
-                }
-                if (typeof this.properties[MUTE_KEY] !== "string") {
-                    this.properties[MUTE_KEY] = "";
-                }
+            if (!this.properties || typeof this.properties !== "object") {
+                this.properties = {};
+            }
+            if (typeof this.properties[SORT_A_KEY] !== "boolean") {
+                this.properties[SORT_A_KEY] = true;
+            }
     
-              bindNode(this);
-              ALEGROUPCONTROLLER_SERVICE.init();
-              ALEGROUPCONTROLLER_SERVICE.registerNode(this);
-              refreshWidgets(this);
-            });
+            if (typeof this.properties[MATCH_KEY] !== "string") {
+                this.properties[MATCH_KEY] = "";
+            }
+            if (typeof this.properties[ALTERNATE_KEY] !== "string") {
+                this.properties[ALTERNATE_KEY] = "";
+            }
+            if (typeof this.properties[EXCLUDE_KEY] !== "string") {
+                this.properties[EXCLUDE_KEY] = "";
+            }
+            if (typeof this.properties[MUTE_KEY] !== "string") {
+                this.properties[MUTE_KEY] = "";
+            }
+
+          bindNode(this);
+          ALEGROUPCONTROLLER_SERVICE.init();
+          ALEGROUPCONTROLLER_SERVICE.registerNode(this);
+          refreshWidgets(this);
             
           return result;
         };
@@ -486,45 +481,16 @@ app.registerExtension({
         const origOnAdded = nodeType.prototype.onAdded;
         nodeType.prototype.onAdded = function(graph) {
             const result = origOnAdded?.apply(this, arguments);
-            /*
-            // Allow ComfyUI subgraph mappings a tiny calculation window to establish links
-            setTimeout(() => {
-                for (let i = 0; i < this.inputs.length; i++) {
-                    syncPromotedWidgetCallback(this, this.inputs[i].name);
-                }
-            }, 100);
-            */
+ 
             console.log("onAdded...");
             return result;
         };
         
         const originalOnConfigure = nodeType.prototype.onConfigure;
         nodeType.prototype.onConfigure = function (info) {
-         
-          for(let i=0;i<info.inputs.length;i++) {              
-              //const boolWidget = addBooleanWidgetToNode(this, info.inputs[i].widget.name, info.widgets_values[i], ALEGROUPCONTROLLER_SERVICE.nameToKey(info.inputs[i].widget.name));
-              //this.inputs[i].widget = { name : info.inputs[i].widget.name, _hash_ref : boolWidget._hash_ref };
-          }
-              /*
-            if (this.widgets && this.widgets.find((w) => { return w._hash_ref===info.inputs[i].widget._hash_ref; })) continue;
-              
-            //this.addInput(info.inputs[i].name, info.inputs[i].type);
-            const boolWidget = addBooleanWidgetToNode(this, info.inputs[i].name, info.widgets_values[i], info.inputs[i].name.trim().toLowerCase());
-
-           // if(info.inputs[i].link) {
-           //   boolWidget._inputslot_origin_id = app.graph.links[info.inputs[i].link].origin_id;
-           // }
-            //this.inputs[i].widget = boolWidget;
-            //this.inputs[i].widget = JSON.parse(JSON.stringify(boolWidget, (key, value) => key === '_node' ? undefined : value));
-            //this.inputs[i].widget.callback = function(value) { booleanWidgetCallback(value, info.inputs[i].name.trim().toLowerCase()); };
-            this.inputs[i].widget = { name : info.inputs[i].name, _hash_ref : boolWidget._hash_ref };
-          }
-          */
-          const result = originalOnConfigure?.apply(this, arguments);
-          // Ensure size updates after slots are generated
-          //this.setSize(this.computeSize());
-          
-          return result;
+            console.log("onConfigure fired. widgets:", this.widgets?.length, "info.widgets_values:", info?.widgets_values);
+            const result = originalOnConfigure?.apply(this, arguments);
+            return result;
         };
       
       const origOnConnectionsChange = nodeType.prototype.onConnectionsChange;
@@ -540,71 +506,9 @@ app.registerExtension({
           if (side === 1 && this.inputs[slot] && output.widget && output.widget._hash_ref) {
              // this.inputs[slot].widget = { name: this.inputs[slot].name, _hash_ref : output.widget._hash_ref };
               if(connect && link_info) {
-                  /*
-                const localWidget = this.widgets[link_info.target_slot];
-                const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, this.graph);
-                //setTimeout(() => {
-                syncPromotedWidgetCallback(upstreamWidget, localWidget);
-                  */
-                //console.log(app.graph.nodes[0].widgets[0].callback);
-                //       }, 500);
-                  /*
-                    if(upstreamWidget && localWidget && localWidget.value!=upstreamWidget.value) {
-                       localWidget.value = upstreamWidget.value;
-                       if (typeof localWidget.callback === "function") {
-                            localWidget.callback(upstreamWidget.value);
-                            this.setDirtyCanvas(true, true);
-                        }
-                    }
-                  */
-                  /*
-                  const graphContext = this.graph || app.graph;
-                  const upstreamNode = graphContext.getNodeById(link_info.origin_id);
-                  if(upstreamNode) {
-                      const upstreamWidget = upstreamNode.widgets?.[0] || upstreamNode.widgets?.find(w => w.type === "toggle" || w.name === "value");
-                      const realWidget = output.node.widgets.find((w) => { return w._hash_ref===output.widget._hash_ref; });
-                      if(upstreamWidget && realWidget && upstreamWidget.value!==realWidget.value) {
-                          localWidget.value = promotedWidget.value;
-                          if (typeof localWidget.callback === "function") {
-                              realWidget.callback(upstreamWidget.value);
-                          }
-                          this.setDirtyCanvas(true, true);
-                      }
-                  }
-                  */
+                 
               }
-          }
-
-          /*
-          if (side === 1 && output.node && output.node.widgets && output.widget) { 
-              //this.slotConnectionChange(connect, link_info.origin_id, output_widget);
-              const realWidget = output.node.widgets.find((w) => { return w._hash_ref===output.widget._hash_ref; });
-              if (realWidget) {
-                  if (connect) {
-                    if(link_info) {
-                        const graphContext = this.graph || app.graph;
-                        const link = graphContext.links[link_info.id];
-                        if(link) {
-                            realWidget._inputslot_origin_id = link_info.origin_id;
-                            if(typeof realWidget.callback === "function") {
-                                setTimeout(() => {
-                                    const upstreamNode = graphContext.getNodeById(link.origin_id);
-                                    if (upstreamNode) {
-                                      realWidget.callback(upstreamNode.widgets?.[0].value);
-                                    }
-                                }, 1000);
-                            }
-                        }
-                    }
-                    console.log(`Wire plugged into input slot index: ${slot}`);
-                  } else {
-                      //const realWidget = output.node.widgets.find((w) => { return w.name===output.widget.name; });
-                      delete realWidget._inputslot_origin_id;
-                      console.log(`Wire removed from input slot index: ${slot}`);
-                  }
-              }
-          }
-        */
+          }         
 
           // Always return the original execution result
           return result;
@@ -613,70 +517,12 @@ app.registerExtension({
         const origOnDrawBackground = nodeType.prototype.onDrawBackground;
         nodeType.prototype.onDrawBackground = function(ctx) {
             const result = origOnDrawBackground?.apply(this, arguments);
-            //refreshWidgets(this);
-            /*
-            // Ensure callback structures remain bound when components are actively clicked
-            for (let i = 0; i < this.inputs.length; i++) {
-                const slotName = this.inputs[i].name;
-            
-                // Continually attempt to stitch the outer callback if unhijacked
-                syncPromotedWidgetCallback(this, slotName);
-            
-                const parentNode = findParentSubgraphNode(this);
-                if (parentNode) {
-                    const promotedWidget = parentNode.widgets?.find(w => w.name === slotName || w.label === slotName);
-                    const localWidget = this.widgets?.find(w => w.name === slotName);
-                
-                    if (promotedWidget && localWidget && localWidget.value !== promotedWidget.value) {
-                        localWidget.value = promotedWidget.value;
-                        if (typeof localWidget.callback === "function") {
-                            localWidget.callback(promotedWidget.value);
-                        }
-                        this.setDirtyCanvas(true, true);
-                    }
-                }
-            }
-            for(const link of  [...this.graph.links.values()].filter(m => m.target_id===this.id)) {
-                const upstreamNode = this.graph.getNodeById(link.origin_id);
-                if(upstreamNode) {
-                    const upstreamWidget = upstreamNode.widgets?.[0] || upstreamNode.widgets?.find(w => w.type === "toggle" || w.name === "value");
-                    const localWidget = this.widgets.find((w) => { return w._hash_ref===this.inputs[link.target_slot].widget._hash_ref; });
-                    if(upstreamWidget && localWidget && localWidget.value!=upstreamWidget.value) {
-                        localWidget.value = upstreamWidget.value;
-                        if (typeof localWidget.callback === "function") {
-                            localWidget.callback(upstreamWidget.value);
-                        }
-                        this.setDirtyCanvas(true, true);
-                    }
-                }
-            }
-            */
-            /*
-            if(this.graph) {
-                for(const link of  [...this.graph.links.values()].filter(m => m.target_id===this.id)) {
-                    // upstreamWidget = getUpstreamWidgetById(link, this.graph);
-                    const localWidget = this.widgets[link.target_slot];
-                    const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link, this.graph);
-                    if(upstreamWidget && localWidget && localWidget.value!=upstreamWidget.value) {
-                       localWidget.value = upstreamWidget.value;
-                       if (typeof localWidget.callback === "function") {
-                            localWidget.callback(upstreamWidget.value);
-                            this.setDirtyCanvas(true, true);
-                        }
-                    }
-                }
-            }
-            */
+
             
             return result;
         };
     },
 
-    /*
-  loadedGraphNode(node) {
-    //console.log("loadedGraphNode");
-  },
-  */
 });
 
     
