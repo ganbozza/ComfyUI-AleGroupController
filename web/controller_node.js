@@ -263,7 +263,9 @@ function refreshWidgets(node) {
             const localWidget = node.widgets.find(w => w._hash_ref === input.widget?._hash_ref);
             if (upstreamWidget && localWidget) syncPromotedWidgetCallback(upstreamWidget, localWidget);
         }
-
+        
+        console.log(`[${node.__dbgId || "??"}] refreshWidgets pass complete. widgets now:`, node.widgets?.length, "updated:", updated);
+        
         if (updated) app.graph?.setDirtyCanvas?.(true, true);
     } finally {
         node._refreshInProgress = false;
