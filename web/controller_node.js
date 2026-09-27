@@ -208,34 +208,13 @@ function refreshWidgets(node) {
         // PHASE 2: compute final desired index for every survivor
         const oldToNewSlot = new Map();
         let orderChanged = false;
-        desiredOrder.forEach((gval, finalIdx) => {
-            const oldIdx = survivorIndexByTitle.get(gval.title);
-            if (oldIdx !== undefined) {
-                // Input slot already exists...
-                newInputs[finalIdx] = currentInputs[oldIdx];
-                let w = currentWidgetByTitle.get(gval.title);
-                if (!w) {
-                    // ...but its paired widget is missing (e.g. after Unpack Subgraph,
-                    // where only .inputs survives serialization, not live widgets).
-                    // Recreate the widget and re-link it to the EXISTING input —
-                    // do NOT create a new input, that would duplicate/orphan the old one.
-                    w = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
-                    newInputs[finalIdx].widget = { name: gval.title, _hash_ref: w._hash_ref };
-                    updated = true;
+           desiredOrder.forEach((gval, finalIdx) => {
+                if (survivorIndexByTitle.has(gval.title)) {
+                    const oldIdx = survivorIndexByTitle.get(gval.title);
+                    oldToNewSlot.set(oldIdx, finalIdx);
+                    if (oldIdx !== finalIdx) orderChanged = true;
                 }
-                newWidgets.push(w);
-            } else {
-                // Genuinely new group: create both input and widget
-                const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
-                node.addInput(gval.title, "BOOLEAN");
-                const addedInput = node.inputs[node.inputs.length - 1];
-                addedInput.widget = { name: gval.title, _hash_ref: boolWidget._hash_ref };
-                node.inputs.pop();
-                newInputs[finalIdx] = addedInput;
-                newWidgets.push(boolWidget);
-                updated = true;
-            }
-        });
+            });
 
         // PHASE 3: patch target_slot on affected links BEFORE moving objects
         // ⚠️ VERIFY: confirm removeInput() above doesn't already shift target_slot
@@ -258,10 +237,21 @@ function refreshWidgets(node) {
         desiredOrder.forEach((gval, finalIdx) => {
             const oldIdx = survivorIndexByTitle.get(gval.title);
             if (oldIdx !== undefined) {
+                // Input slot already exists...
                 newInputs[finalIdx] = currentInputs[oldIdx];
-                const w = currentWidgetByTitle.get(gval.title);
-                if (w) newWidgets.push(w);
+                let w = currentWidgetByTitle.get(gval.title);
+                if (!w) {
+                    // ...but its paired widget is missing (e.g. after Unpack Subgraph,
+                    // where only .inputs survives serialization, not live widgets).
+                    // Recreate the widget and re-link it to the EXISTING input —
+                    // do NOT create a new input, that would duplicate/orphan the old one.
+                    w = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
+                    newInputs[finalIdx].widget = { name: gval.title, _hash_ref: w._hash_ref };
+                    updated = true;
+                }
+                newWidgets.push(w);
             } else {
+                // Genuinely new group: create both input and widget
                 const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
                 node.addInput(gval.title, "BOOLEAN");
                 const addedInput = node.inputs[node.inputs.length - 1];
