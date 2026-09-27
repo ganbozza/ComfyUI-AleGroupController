@@ -167,6 +167,11 @@ function refreshWidgets(node) {
         } else {
             service_groups_collection = ALEGROUPCONTROLLER_SERVICE.group_collections;
         }
+
+        console.log(`[${node.__dbgId || "??"}] refreshWidgets: group_collections size:`,
+            ALEGROUPCONTROLLER_SERVICE.group_collections.size,
+            "properties:", JSON.stringify(node.properties));
+        
         if (service_groups_collection.size > 0) node._groupcollected = true;
 
         // Desired final order
