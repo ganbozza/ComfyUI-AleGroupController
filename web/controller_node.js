@@ -220,7 +220,8 @@ function refreshWidgets(node) {
         node.inputs.forEach((input, idx) => survivorIndexByTitle.set(input.name, idx));
 
         // PHASE 2 (replaces the old reorder-with-target_slot-patch approach entirely)
-
+        // PHASE 2+4 MERGED: pin linked survivors in place, fill everything else around them
+        
         // Partition survivors: anything currently linked is FROZEN at its current index —
         // we never touch its position or its link's target_slot again. Only unlinked
         // survivors and brand-new groups get placed into whatever indices remain.
@@ -290,7 +291,7 @@ function refreshWidgets(node) {
         // PHASE 5: re-sync promotion for every still-linked input (idempotent, any depth)
         for (const input of node.inputs) {
             if (input.link == null) continue;
-            const link_info = node.graph.links.get(input.link); // links is a Map
+            const link_info = node.graph.links.get(input.link);
             if (!link_info) continue;
             const upstreamWidget = ALEGROUPCONTROLLER_SERVICE.getUpstreamWidgetByLink(link_info, node.graph);
             const localWidget = node.widgets.find(w => w._hash_ref === input.widget?._hash_ref);
