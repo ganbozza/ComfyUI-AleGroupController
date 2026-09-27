@@ -445,37 +445,33 @@ app.registerExtension({
         if (String(nodeData?.name || "") !== "AleGroupController") {
           return;
         }
-
+        
+        // Module-scoped, keyed by node identity — survives across all instances
+        // without ever polluting the node object itself or its serialized state.
+        const _initializedNodes = new WeakSet();
+        
         const originalOnNodeCreated = nodeType.prototype.onNodeCreated;
         nodeType.prototype.onNodeCreated = function () {
             const result = originalOnNodeCreated?.apply(this, arguments);
 
+             if (_initializedNodes.has(this)) return result;
+            _initializedNodes.add(this);
+        
             if (!this.properties || typeof this.properties !== "object") {
                 this.properties = {};
             }
-            if (typeof this.properties[SORT_A_KEY] !== "boolean") {
-                this.properties[SORT_A_KEY] = true;
-            }
-    
-            if (typeof this.properties[MATCH_KEY] !== "string") {
-                this.properties[MATCH_KEY] = "";
-            }
-            if (typeof this.properties[ALTERNATE_KEY] !== "string") {
-                this.properties[ALTERNATE_KEY] = "";
-            }
-            if (typeof this.properties[EXCLUDE_KEY] !== "string") {
-                this.properties[EXCLUDE_KEY] = "";
-            }
-            if (typeof this.properties[MUTE_KEY] !== "string") {
-                this.properties[MUTE_KEY] = "";
-            }
-
-          bindNode(this);
-          ALEGROUPCONTROLLER_SERVICE.init();
-          ALEGROUPCONTROLLER_SERVICE.registerNode(this);
-          refreshWidgets(this);
+            if (typeof this.properties[SORT_A_KEY] !== "boolean") this.properties[SORT_A_KEY] = true;
+            if (typeof this.properties[MATCH_KEY] !== "string") this.properties[MATCH_KEY] = "";
+            if (typeof this.properties[ALTERNATE_KEY] !== "string") this.properties[ALTERNATE_KEY] = "";
+            if (typeof this.properties[EXCLUDE_KEY] !== "string") this.properties[EXCLUDE_KEY] = "";
+            if (typeof this.properties[MUTE_KEY] !== "string") this.properties[MUTE_KEY] = "";
+        
+            bindNode(this);
+            ALEGROUPCONTROLLER_SERVICE.init();
+            ALEGROUPCONTROLLER_SERVICE.registerNode(this);
+            refreshWidgets(this); // safe to call immediately now — it self-guards on node.graph and self-retries
             
-          return result;
+            return result;
         };
 
         const origOnAdded = nodeType.prototype.onAdded;
