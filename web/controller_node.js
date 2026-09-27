@@ -173,7 +173,18 @@ function refreshWidgets(node) {
 
         //console.log(`[${node.__dbgId||"??"}] refreshWidgets: group_collections size:`, ALEGROUPCONTROLLER_SERVICE.group_collections.size, "properties:", JSON.stringify(node.properties));
         
-        if (service_groups_collection.size > 0) node._groupcollected = true;
+        // Guard: don't touch existing inputs/widgets until we've observed
+        // a real, non-empty group list at least once. An empty read this
+        // early almost always means the service hasn't scanned yet (a
+        // draw()-loop timing race on fresh page load), not "there are
+        // genuinely zero groups." Bail out and let the next poll retry.
+        if (!node._groupcollected) {
+            if (service_groups_collection.size > 0) {
+                node._groupcollected = true;
+            } else {
+                return;
+            }
+        }
 
         // Desired final order
         const desiredOrder = [];
