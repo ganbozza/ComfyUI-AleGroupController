@@ -177,17 +177,21 @@ function refreshWidgets(node) {
 
         //console.log(`[${node.__dbgId||"??"}] refreshWidgets: group_collections size:`, ALEGROUPCONTROLLER_SERVICE.group_collections.size, "properties:", JSON.stringify(node.properties));
         
-        // Guard: don't touch existing inputs/widgets until we've observed
-        // a real, non-empty group list at least once. An empty read this
-        // early almost always means the service hasn't scanned yet (a
-        // draw()-loop timing race on fresh page load), not "there are
-        // genuinely zero groups." Bail out and let the next poll retry.
-        if (!node._groupcollected) {
-            if (service_groups_collection.size > 0) {
-                node._groupcollected = true;
-            } else {
-                return;
-            }
+        // Guard: don't remove/rebuild anything until the service's group list
+        // demonstrably includes every group this node currently has an active
+        // link to. A partial (nonzero-but-incomplete) collection is just as
+        // dangerous as an empty one — it causes real, linked inputs to be
+        // misidentified as "no longer desired" and destroyed. This check runs
+        // on every pass (not just once), so it self-heals regardless of which
+        // specific pass happens to catch an incomplete scan.
+        const currentlyLinkedNames = (node.inputs || [])
+            .filter(i => i.link != null)
+            .map(i => i.name);
+        const collectionTitles = new Set([...service_groups_collection.values()].map(g => g.title));
+        const collectionCoversAllLinkedInputs = currentlyLinkedNames.every(name => collectionTitles.has(name));
+        
+        if (!collectionCoversAllLinkedInputs) {
+            return; // service hasn't caught up yet this pass — try again in 100ms
         }
 
         // Desired final order
