@@ -158,7 +158,7 @@ function refreshWidgets(node) {
     let updated = false;
 
     try {
-         console.log(`[${node.__dbgId||"??"}] TOP OF PASS. graph:`, !!node.graph, "inputs:", (node.inputs || []).map(i => ({ name: i.name, link: i.link })));
+         //console.log(`[${node.__dbgId||"??"}] TOP OF PASS. graph:`, !!node.graph, "inputs:", (node.inputs || []).map(i => ({ name: i.name, link: i.link })));
         
         if (!node.graph) { /*console.log(`[${node.__dbgId||"??"}] refreshWidgets: no graph, bailing`);*/ return; }
 
