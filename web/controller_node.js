@@ -157,9 +157,9 @@ function refreshWidgets(node) {
     let updated = false;
 
     try {
-        if (!node.graph) { console.log(`[${node.__dbgId||"??"}] refreshWidgets: no graph, bailing`); return; }
+        if (!node.graph) { /*console.log(`[${node.__dbgId||"??"}] refreshWidgets: no graph, bailing`);*/ return; }
 
-        console.log(`[${node.__dbgId||"??"}] refreshWidgets: node.inputs =`, node.inputs, "node.widgets =", node.widgets);
+        //console.log(`[${node.__dbgId||"??"}] refreshWidgets: node.inputs =`, node.inputs, "node.widgets =", node.widgets);
 
 
         let service_groups_collection;
@@ -171,7 +171,7 @@ function refreshWidgets(node) {
             service_groups_collection = ALEGROUPCONTROLLER_SERVICE.group_collections;
         }
 
-        console.log(`[${node.__dbgId||"??"}] refreshWidgets: group_collections size:`, ALEGROUPCONTROLLER_SERVICE.group_collections.size, "properties:", JSON.stringify(node.properties));
+        //console.log(`[${node.__dbgId||"??"}] refreshWidgets: group_collections size:`, ALEGROUPCONTROLLER_SERVICE.group_collections.size, "properties:", JSON.stringify(node.properties));
         
         if (service_groups_collection.size > 0) node._groupcollected = true;
 
@@ -187,7 +187,7 @@ function refreshWidgets(node) {
             desiredOrder.push(gval);
         }
 
-        console.log(`[${node.__dbgId||"??"}] refreshWidgets: desiredOrder length =`, desiredOrder.length, "titles:", desiredOrder.map(g=>g.title));
+        //console.log(`[${node.__dbgId||"??"}] refreshWidgets: desiredOrder length =`, desiredOrder.length, "titles:", desiredOrder.map(g=>g.title));
         
         const desiredTitles = new Set(desiredOrder.map(g => g.title));
 
@@ -284,7 +284,7 @@ function refreshWidgets(node) {
             if (upstreamWidget && localWidget) syncPromotedWidgetCallback(upstreamWidget, localWidget);
         }
         
-       console.log(`[${node.__dbgId||"??"}] refreshWidgets pass complete. widgets now:`, node.widgets?.length, "updated:", updated);
+       //console.log(`[${node.__dbgId||"??"}] refreshWidgets pass complete. widgets now:`, node.widgets?.length, "updated:", updated);
         
         if (updated) app.graph?.setDirtyCanvas?.(true, true);
    } catch (err) {
