@@ -159,7 +159,7 @@ function refreshWidgets(node) {
     let updated = false;
 
     try {
-         //console.log(`[${node.__dbgId||"??"}] TOP OF PASS. graph:`, !!node.graph, "inputs:", (node.inputs || []).map(i => ({ name: i.name, link: i.link })));
+         console.log(`[${node.__dbgId||"??"}] TOP OF PASS. graph:`, !!node.graph, "inputs:", (node.inputs || []).map(i => ({ name: i.name, link: i.link })));
         
         if (!node.graph) { /*console.log(`[${node.__dbgId||"??"}] refreshWidgets: no graph, bailing`);*/ return; }
 
@@ -184,15 +184,15 @@ function refreshWidgets(node) {
         // misidentified as "no longer desired" and destroyed. This check runs
         // on every pass (not just once), so it self-heals regardless of which
         // specific pass happens to catch an incomplete scan.
-        const currentlyLinkedNames = (node.inputs || [])
-            .filter(i => i.link != null)
-            .map(i => i.name);
-        const collectionTitles = new Set([...service_groups_collection.values()].map(g => g.title));
-        const collectionCoversAllLinkedInputs = currentlyLinkedNames.every(name => collectionTitles.has(name));
-        
-        if (!collectionCoversAllLinkedInputs) {
-            return; // service hasn't caught up yet this pass — try again in 100ms
-        }
+const currentlyLinkedNames = (node.inputs || []).filter(i => i.link != null).map(i => i.name);
+const collectionTitles = new Set([...service_groups_collection.values()].map(g => g.title));
+const collectionCoversAllLinkedInputs = currentlyLinkedNames.every(name => collectionTitles.has(name));
+
+console.log(`[${node.__dbgId||"??"}] guard check: linkedNames=`, currentlyLinkedNames, "collectionTitles=", [...collectionTitles], "passes=", collectionCoversAllLinkedInputs);
+
+if (!collectionCoversAllLinkedInputs) {
+    return;
+}
 
         // Desired final order
         const desiredOrder = [];
