@@ -149,7 +149,7 @@ function parseSets(str) {
   }
   return group_map;
 }
-
+window.__debugRefreshWidgets = refreshWidgets;
 function refreshWidgets(node) {
     if (node._refreshInProgress) return;
  requestAnimationFrame(() => {    
