@@ -157,7 +157,10 @@ function refreshWidgets(node) {
     let updated = false;
 
     try {
-        if (!node.graph) return;
+        if (!node.graph) { console.log(`[${node.__dbgId||"??"}] refreshWidgets: no graph, bailing`); return; }
+
+        console.log(`[${node.__dbgId||"??"}] refreshWidgets: node.inputs =`, node.inputs, "node.widgets =", node.widgets);
+
 
         let service_groups_collection;
         if (node.properties?.[SORT_A_KEY]) {
@@ -168,9 +171,7 @@ function refreshWidgets(node) {
             service_groups_collection = ALEGROUPCONTROLLER_SERVICE.group_collections;
         }
 
-        console.log(`[${node.__dbgId || "??"}] refreshWidgets: group_collections size:`,
-            ALEGROUPCONTROLLER_SERVICE.group_collections.size,
-            "properties:", JSON.stringify(node.properties));
+        console.log(`[${node.__dbgId||"??"}] refreshWidgets: group_collections size:`, ALEGROUPCONTROLLER_SERVICE.group_collections.size, "properties:", JSON.stringify(node.properties));
         
         if (service_groups_collection.size > 0) node._groupcollected = true;
 
@@ -185,6 +186,9 @@ function refreshWidgets(node) {
             } catch (e) { continue; }
             desiredOrder.push(gval);
         }
+
+        console.log(`[${node.__dbgId||"??"}] refreshWidgets: desiredOrder length =`, desiredOrder.length, "titles:", desiredOrder.map(g=>g.title));
+        
         const desiredTitles = new Set(desiredOrder.map(g => g.title));
 
         // PHASE 1: remove filtered-out groups via engine methods (handles disconnects safely)
@@ -269,9 +273,11 @@ function refreshWidgets(node) {
             if (upstreamWidget && localWidget) syncPromotedWidgetCallback(upstreamWidget, localWidget);
         }
         
-        console.log(`[${node.__dbgId || "??"}] refreshWidgets pass complete. widgets now:`, node.widgets?.length, "updated:", updated);
+       console.log(`[${node.__dbgId||"??"}] refreshWidgets pass complete. widgets now:`, node.widgets?.length, "updated:", updated);
         
         if (updated) app.graph?.setDirtyCanvas?.(true, true);
+   } catch (err) {
+        console.error(`[${node.__dbgId||"??"}] refreshWidgets THREW:`, err);
     } finally {
         node._refreshInProgress = false;
         setTimeout(() => refreshWidgets(node), 100);
