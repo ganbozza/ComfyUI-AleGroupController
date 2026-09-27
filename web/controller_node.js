@@ -152,8 +152,9 @@ function parseSets(str) {
 
 function refreshWidgets(node) {
     if (node._refreshInProgress) return;
- requestAnimationFrame(() => {    
-    node._refreshInProgress = true;
+    node._refreshInProgress = true; // set synchronously, immediately — closes the race window
+
+    requestAnimationFrame(() => {    
     let updated = false;
 
     try {
