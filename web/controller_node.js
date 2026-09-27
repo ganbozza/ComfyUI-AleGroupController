@@ -154,8 +154,7 @@ function parseSets(str) {
 function refreshWidgets(node) {
     if (node._refreshInProgress) return;
     node._refreshInProgress = true; // set synchronously, immediately — closes the race window
-
-    requestAnimationFrame(() => {    
+    
     let updated = false;
 
     try {
@@ -324,7 +323,6 @@ if (!collectionCoversAllLinkedInputs) {
         node._refreshInProgress = false;
         setTimeout(() => refreshWidgets(node), 100);
     }
-});
 }
 
 function setWidgetValue(widget, value=null) {
