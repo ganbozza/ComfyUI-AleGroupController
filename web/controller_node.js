@@ -286,52 +286,7 @@ function refreshWidgets(node) {
         // No target_slot patching anywhere — every link keeps the exact slot it had
 
 
-        // PHASE 4: rebuild inputs/widgets in final order (reuse survivor refs)
-        const newInputs = new Array(desiredOrder.length);
-        const newWidgets = [];
-        const currentInputs = node.inputs.slice();
-        const currentWidgetByTitle = new Map((node.widgets || []).map(w => [(w.options?.title ?? w.name), w]));
-
-        desiredOrder.forEach((gval, finalIdx) => {
-            const oldIdx = survivorIndexByTitle.get(gval.title);
-            if (oldIdx !== undefined) {
-                // Input slot already exists...
-                newInputs[finalIdx] = currentInputs[oldIdx];
-                let w = currentWidgetByTitle.get(gval.title);
-                if (!w) {
-                    // ...but its paired widget is missing (e.g. after Unpack Subgraph,
-                    // where only .inputs survives serialization, not live widgets).
-                    // Recreate the widget and re-link it to the EXISTING input —
-                    // do NOT create a new input, that would duplicate/orphan the old one.
-                    w = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
-                    newInputs[finalIdx].widget = { name: gval.title, _hash_ref: w._hash_ref };
-                    updated = true;
-                }
-                newWidgets.push(w);
-            } else {
-                // Genuinely new group: create both input and widget
-                const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
-                node.addInput(gval.title, "BOOLEAN");
-                const addedInput = node.inputs[node.inputs.length - 1];
-                addedInput.widget = { name: gval.title, _hash_ref: boolWidget._hash_ref };
-                node.inputs.pop();
-                newInputs[finalIdx] = addedInput;
-                newWidgets.push(boolWidget);
-                updated = true;
-            }
-        });
-        newWidgets.sort((a, b) => {
-            const ta = a.options?.title ?? a.name, tb = b.options?.title ?? b.name;
-            return desiredOrder.findIndex(g => g.title === ta) - desiredOrder.findIndex(g => g.title === tb);
-        });
-
-        node.inputs = newInputs;   // setter splices into _inputs in place
-        node.widgets = newWidgets; // plain property, direct assign confirmed safe
-
-        // _inputs setter does NOT refresh _concreteInputs — must do it ourselves
-        node._setConcreteSlots();
-        node._arrangeWidgetInputSlots();
-
+ 
         // PHASE 5: re-sync promotion for every still-linked input (idempotent, any depth)
         for (const input of node.inputs) {
             if (input.link == null) continue;
