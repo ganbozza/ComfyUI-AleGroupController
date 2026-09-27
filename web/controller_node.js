@@ -149,7 +149,7 @@ function parseSets(str) {
   }
   return group_map;
 }
-window.__debugRefreshWidgets = refreshWidgets;
+
 function refreshWidgets(node) {
     if (node._refreshInProgress) return;
  requestAnimationFrame(() => {    
@@ -157,6 +157,8 @@ function refreshWidgets(node) {
     let updated = false;
 
     try {
+         console.log(`[${node.__dbgId||"??"}] TOP OF PASS. graph:`, !!node.graph, "inputs:", (node.inputs || []).map(i => ({ name: i.name, link: i.link })));
+        
         if (!node.graph) { /*console.log(`[${node.__dbgId||"??"}] refreshWidgets: no graph, bailing`);*/ return; }
 
         //console.log(`[${node.__dbgId||"??"}] refreshWidgets: node.inputs =`, node.inputs, "node.widgets =", node.widgets);
