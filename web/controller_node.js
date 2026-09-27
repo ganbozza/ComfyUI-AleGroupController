@@ -539,8 +539,9 @@ app.registerExtension({
         
         const originalOnConfigure = nodeType.prototype.onConfigure;
         nodeType.prototype.onConfigure = function (info) {
-            console.log(`[${this.__dbgId || "??"}] onConfigure. widgets:`, this.widgets?.length, "values:", info?.widgets_values, "graph attached:", !!this.graph);
+            console.log(`[${this.__dbgId || "??"}] onConfigure BEFORE. widgets:`, this.widgets?.length, "inputs:", (this.inputs||[]).map(i=>({name:i.name,link:i.link})));
             const result = originalOnConfigure?.apply(this, arguments);
+            console.log(`[${this.__dbgId || "??"}] onConfigure AFTER native configure. widgets:`, this.widgets?.length, "inputs:", (this.inputs||[]).map(i=>({name:i.name,link:i.link})));
             return result;
         };
       
