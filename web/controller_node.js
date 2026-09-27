@@ -158,12 +158,9 @@ function refreshWidgetsPass(node) {
     let updated = false;
 
     try {
-         console.log(`[${node.__dbgId||"??"}] TOP OF PASS. graph:`, !!node.graph, "inputs:", (node.inputs || []).map(i => ({ name: i.name, link: i.link })));
+         //console.log(`[${node.__dbgId||"??"}] TOP OF PASS. graph:`, !!node.graph, "inputs:", (node.inputs || []).map(i => ({ name: i.name, link: i.link })));
         
         if (!node.graph) { /*console.log(`[${node.__dbgId||"??"}] refreshWidgets: no graph, bailing`);*/ return; }
-
-        //console.log(`[${node.__dbgId||"??"}] refreshWidgets: node.inputs =`, node.inputs, "node.widgets =", node.widgets);
-
 
         let service_groups_collection;
         if (node.properties?.[SORT_A_KEY]) {
@@ -174,7 +171,6 @@ function refreshWidgetsPass(node) {
             service_groups_collection = ALEGROUPCONTROLLER_SERVICE.group_collections;
         }
 
-        //console.log(`[${node.__dbgId||"??"}] refreshWidgets: group_collections size:`, ALEGROUPCONTROLLER_SERVICE.group_collections.size, "properties:", JSON.stringify(node.properties));
         
         // Guard: don't remove/rebuild anything until the service's group list
         // demonstrably includes every group this node currently has an active
@@ -183,15 +179,15 @@ function refreshWidgetsPass(node) {
         // misidentified as "no longer desired" and destroyed. This check runs
         // on every pass (not just once), so it self-heals regardless of which
         // specific pass happens to catch an incomplete scan.
-const currentlyLinkedNames = (node.inputs || []).filter(i => i.link != null).map(i => i.name);
-const collectionTitles = new Set([...service_groups_collection.values()].map(g => g.title));
-const collectionCoversAllLinkedInputs = currentlyLinkedNames.every(name => collectionTitles.has(name));
-
-console.log(`[${node.__dbgId||"??"}] guard check: linkedNames=`, currentlyLinkedNames, "collectionTitles=", [...collectionTitles], "passes=", collectionCoversAllLinkedInputs);
-
-if (!collectionCoversAllLinkedInputs) {
-    return;
-}
+        const currentlyLinkedNames = (node.inputs || []).filter(i => i.link != null).map(i => i.name);
+        const collectionTitles = new Set([...service_groups_collection.values()].map(g => g.title));
+        const collectionCoversAllLinkedInputs = currentlyLinkedNames.every(name => collectionTitles.has(name));
+        
+        //console.log(`[${node.__dbgId||"??"}] guard check: linkedNames=`, currentlyLinkedNames, "collectionTitles=", [...collectionTitles], "passes=", collectionCoversAllLinkedInputs);
+        
+        if (!collectionCoversAllLinkedInputs) {
+            return;
+        }
 
         // Desired final order
         const desiredOrder = [];
@@ -204,9 +200,7 @@ if (!collectionCoversAllLinkedInputs) {
             } catch (e) { continue; }
             desiredOrder.push(gval);
         }
-
-        //console.log(`[${node.__dbgId||"??"}] refreshWidgets: desiredOrder length =`, desiredOrder.length, "titles:", desiredOrder.map(g=>g.title));
-        
+      
         const desiredTitles = new Set(desiredOrder.map(g => g.title));
 
         // PHASE 1: remove filtered-out groups via engine methods (handles disconnects safely)
@@ -314,7 +308,6 @@ if (!collectionCoversAllLinkedInputs) {
             if (upstreamWidget && localWidget) syncPromotedWidgetCallback(upstreamWidget, localWidget);
         }
         
-       //console.log(`[${node.__dbgId||"??"}] refreshWidgets pass complete. widgets now:`, node.widgets?.length, "updated:", updated);
         
         if (updated) app.graph?.setDirtyCanvas?.(true, true);
    } catch (err) {
@@ -526,7 +519,7 @@ app.registerExtension({
             if (!this.__dbgId) {
                 this.__dbgId = Math.random().toString(36).slice(2, 8); // assign ONCE, ever
             }
-            console.log(`[${this.__dbgId}] onNodeCreated fired. graph attached:`, !!this.graph, "already initialized:", _initializedNodes.has(this));
+           // console.log(`[${this.__dbgId}] onNodeCreated fired. graph attached:`, !!this.graph, "already initialized:", _initializedNodes.has(this));
             const result = originalOnNodeCreated?.apply(this, arguments);
             if (_initializedNodes.has(this)) { return result; }
             _initializedNodes.add(this);
@@ -550,7 +543,7 @@ app.registerExtension({
 
         const origOnAdded = nodeType.prototype.onAdded;
         nodeType.prototype.onAdded = function(graph) {
-            console.log(`[${this.__dbgId || "??"}] onAdded. widgets:`, this.widgets?.length);
+            //console.log(`[${this.__dbgId || "??"}] onAdded. widgets:`, this.widgets?.length);
             const result = origOnAdded?.apply(this, arguments);
             return result;
         };
