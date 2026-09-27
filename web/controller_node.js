@@ -208,7 +208,7 @@ function refreshWidgets(node) {
         // PHASE 1: remove filtered-out groups via engine methods (handles disconnects safely)
         for (let i = node.inputs.length - 1; i >= 0; i--) {
             if (!desiredTitles.has(node.inputs[i].name)) {
-                const w = node.widgets?.find(w => (w.options?.title ?? w.name) === node.inputs[i].name);
+                const w = node.widgets?.find(w => w && (w.options?.title ?? w.name) === node.inputs[i].name);
                 if (w) node.removeWidget(w);
                 node.removeInput(i);
                 updated = true;
@@ -225,8 +225,8 @@ function refreshWidgets(node) {
         // Partition survivors: anything currently linked is FROZEN at its current index —
         // we never touch its position or its link's target_slot again. Only unlinked
         // survivors and brand-new groups get placed into whatever indices remain.
-        const pinnedIndices = new Set();      // indices locked by a linked survivor
-        const pinnedTitleByIndex = new Map(); // index -> title, for the pinned ones
+        const pinnedIndices = new Set();
+        const pinnedTitleByIndex = new Map();
         node.inputs.forEach((input, idx) => {
             if (input.link != null) {
                 pinnedIndices.add(idx);
@@ -238,25 +238,32 @@ function refreshWidgets(node) {
         const newInputs = new Array(finalLength);
         const newWidgets = new Array(finalLength);
         const currentInputs = node.inputs.slice();
-        const currentWidgetByTitle = new Map((node.widgets || []).map(w => [(w.options?.title ?? w.name), w]));
+        // filter(Boolean) drops any pre-existing holes so they can't propagate further
+        const currentWidgetByTitle = new Map(
+            (node.widgets || []).filter(Boolean).map(w => [(w.options?.title ?? w.name), w])
+        );
         
-        // Place every pinned (linked) survivor at its EXACT current index, untouched.
-        // If a pinned index falls outside the new final length (shouldn't normally
-        // happen unless groups were removed), that survivor gets appended instead.
         for (const [idx, title] of pinnedTitleByIndex) {
-            const targetIdx = idx < finalLength ? idx : newInputs.length; // safety fallback
+            const targetIdx = idx < finalLength ? idx : newInputs.length;
             newInputs[targetIdx] = currentInputs[idx];
-            newWidgets[targetIdx] = currentWidgetByTitle.get(title);
+            let w = currentWidgetByTitle.get(title);
+            if (!w) {
+                // Self-heal: a pinned (linked) input's widget went missing somehow —
+                // recreate it rather than leaving a hole that crashes the next pass.
+                const gval = desiredOrder.find(g => g.title === title) ?? { title, value: true, key: title };
+                w = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
+                newInputs[targetIdx].widget = { name: title, _hash_ref: w._hash_ref };
+                updated = true;
+            }
+            newWidgets[targetIdx] = w;
         }
         
-        // Fill every remaining (non-pinned) final slot, in desiredOrder's sorted
-        // sequence, skipping titles already placed above.
         const placedTitles = new Set([...pinnedTitleByIndex.values()]);
         let cursor = 0;
         for (const gval of desiredOrder) {
             if (placedTitles.has(gval.title)) continue;
-            while (newInputs[cursor] !== undefined) cursor++; // find next free slot
-            const survivorIdx = node.inputs.findIndex(i => i.name === gval.title); // unlinked survivor?
+            while (newInputs[cursor] !== undefined) cursor++;
+            const survivorIdx = node.inputs.findIndex(i => i.name === gval.title);
             if (survivorIdx !== -1) {
                 newInputs[cursor] = currentInputs[survivorIdx];
                 let w = currentWidgetByTitle.get(gval.title);
@@ -267,7 +274,6 @@ function refreshWidgets(node) {
                 }
                 newWidgets[cursor] = w;
             } else {
-                // Genuinely new group
                 const boolWidget = addBooleanWidgetToNode(node, gval.title, gval.value, gval.key);
                 node.addInput(gval.title, "BOOLEAN");
                 const addedInput = node.inputs[node.inputs.length - 1];
@@ -278,6 +284,12 @@ function refreshWidgets(node) {
                 updated = true;
             }
             cursor++;
+        }
+        
+        // Safety net: verify no holes made it through before committing
+        if (newInputs.some(x => x === undefined) || newWidgets.some(x => x === undefined)) {
+            console.error(`[${node.__dbgId||"??"}] refreshWidgets: hole detected, aborting this pass to avoid corrupting node state`, newInputs, newWidgets);
+            return;
         }
         
         node.inputs = newInputs;
