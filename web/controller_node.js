@@ -420,7 +420,6 @@ function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
         
         // Hijack the top-level master proxy toggle box safely
         const newCallback = function(value) {
-            if (this._is_hijacked) return;
             if (typeof origPromotedCallback === "function") {
                 origPromotedCallback?.apply(this, arguments);
             }
@@ -435,6 +434,7 @@ function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
             }
         };
 
+        if  (promotedWidget._is_hijacked) return;
         // Initialize the widget with our new custom callback
         promotedWidget.callback = newCallback;
 
