@@ -420,12 +420,14 @@ function syncPromotedWidgetCallback(promotedWidget, sourceWidget) {
         
         // Hijack the top-level master proxy toggle box safely
         const newCallback = function(value) {
+            if (this._is_hijacked) return;
             if (typeof origPromotedCallback === "function") {
                 origPromotedCallback?.apply(this, arguments);
             }
             
             // Push the changed state down to our interior node widget
             sourceWidget.value = value;
+            this._is_hijacked = true;
             
             // FORCED TRIGGER: Instantly execute custom frontend logic callback
             if (typeof sourceWidget.callback === "function") {
